@@ -24,7 +24,7 @@ class Map():
     def set_map(self):
         for i in range(0, len(self.matrix)):
             for j in range(0, len(self.matrix[i])):
-                if self.matrix[i][j].element == 'E':
+                if self.matrix[i][j].element == ' ' and (i % (len(self.matrix)-1) == 0 or j % (len(self.matrix[0])-1) == 0):
                     self.end_node = self.matrix[i][j]
                 elif self.matrix[i][j].element == 'S':
                     self.start_node = self.matrix[i][j]
@@ -35,7 +35,7 @@ class Map():
 
                 # Danh sach lien ket
                 # luu cac dinh lan can co the di den
-                if self.matrix[i][j].is_path() and self.matrix[i][j].element != 'E':
+                if self.matrix[i][j].is_path() and self.matrix[i][j] != self.end_node:
                     if self.matrix[i - 1][j].is_path():
                         self.matrix[i][j].neighbor_node.append(
                             self.matrix[i - 1][j])
@@ -67,6 +67,26 @@ class Map():
         self.set_map()
         return self
 
+    def read_file2(self, file_path):
+        f = open(file_path, 'r')
+        n_bonus_points = int(next(f)[:-1])
+        bonus_points = []
+        for i in range(n_bonus_points):
+            x, y, reward = map(int, next(f)[:-1].split(' '))
+            bonus_points.append((x, y, reward))
+
+        text = f.read()
+        matrix = [list(i) for i in text.splitlines()]
+        for i in range(len(matrix)):
+            row = []
+            for j in range(len(matrix[0])):
+                row.append(Node(matrix[i][j], (i, j)))
+            self.matrix.append(row)
+        f.close()
+        self.bonus_node = bonus_points
+        self.set_map()
+        print()
+
     def print_matrix(self):
         for i in self.matrix:
             for j in i:
@@ -74,26 +94,7 @@ class Map():
             print()
 
 
-def read_file(self, file_path='maze.txt'):
-    f = open(file_path, 'r')
-    n_bonus_points = int(next(f)[:-1])
-    bonus_points = []
-    for i in range(n_bonus_points):
-        x, y, reward = map(int, next(f)[:-1].split(' '))
-        bonus_points.append((x, y, reward))
-
-    text = f.read()
-    matrix = [list(i) for i in text.splitlines()]
-    for i in range(len(matrix)):
-        row = []
-        for j in range(len(matrix[0])):
-            row.append(Node(matrix[i][j], (i, j)))
-        self.m.append(row)
-    f.close()
-    self.bonus_node = bonus_points
-
-
-def UniformCostSearch(start, goal, explore):
+def UCS(start, goal, explore):
     mini = explore[0]
     for i in explore:
         if i.total_cost < mini.total_cost:
@@ -108,7 +109,7 @@ def UniformCostSearch(start, goal, explore):
                 explore.append(i)
     if mini != goal:
         explore.remove(mini)
-        UniformCostSearch(start, goal, explore)
+        UCS(start, goal, explore)
     else:
         return
 
@@ -159,7 +160,7 @@ def Astar(start, goal, now):
 
     if mini != goal:
         explore.remove(mini)
-        UniformCostSearch(start, goal, explore)
+        UCS(start, goal, explore)
     else:
         return
 
@@ -170,22 +171,22 @@ def output_result(now, map):
         return
     now.element = 'o'
     td = now.pre_node.pop(0)
-    output_result(map.m[td[0]][td[1]], map)
+    output_result(map.matrix[td[0]][td[1]], map)
 
 
 # - In ra ket qua
-file_path = "/mnt/d/mat1.txt"
-map = Map().read_file(file_path)
-map.print_map()
+map = Map()
+map.read_file2('input.txt')
+map.print_matrix()
 
 explore = []
 
 explore.append(map.start_node)
 
-UniformCostSearch(map.start_node, map.end_node, explore)
+UCS(map.start_node, map.end_node, explore)
 
 output_result(map.end_node, map)
 
 print()
 
-map.print_map()
+map.print_matrix()
