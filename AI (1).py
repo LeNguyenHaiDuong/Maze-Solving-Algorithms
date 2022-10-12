@@ -155,7 +155,7 @@ def heuristic_2(mat, now, next_node):  # giai thuat bam tuong ben phai
 def Astar(start, goal, now):
     mini = now.neighbor_node[0]
     for i in now.neighbor_node:
-        if heuristic_1(goal, i) < heuristic(goal, mini):
+        if heuristic_1(goal, i) < heuristic_1(goal, mini):
             mini = i
 
     if mini != goal:
@@ -174,19 +174,24 @@ def output_result(now, map):
     output_result(map.matrix[td[0]][td[1]], map)
 
 
-# - In ra ket qua
-map = Map()
-map.read_file2('input.txt')
-map.print_matrix()
-
 explore = []
 
-explore.append(map.start_node)
 
-UCS(map.start_node, map.end_node, explore)
+def main():
+    # - In ra ket qua
+    map = Map()
+    map.read_file2('input.txt')
+    map.print_matrix()
 
-output_result(map.end_node, map)
+    explore.append(map.start_node)
 
-print()
+    UCS(map.start_node, map.end_node, explore)
 
-map.print_matrix()
+    output_result(map.end_node, map)
+
+    print()
+
+    map.print_matrix()
+
+
+main()
