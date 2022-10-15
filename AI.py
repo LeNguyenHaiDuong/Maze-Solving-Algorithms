@@ -1,3 +1,6 @@
+import math
+
+
 class Node():
     def __init__(self, ele, pos):
         self.pre_node = []  # node truoc
@@ -94,7 +97,47 @@ class Map():
             print()
 
 
-def UCS(start, goal, explore):
+stack = []
+m = Map()
+
+
+def DFS(goal, close):
+    if len(stack) != 0:
+        cur_node = stack.pop()
+        close.append(cur_node)
+
+        if cur_node is goal:
+            return
+
+        for node in cur_node.neighbor_node:
+            if node not in close:
+                node.pre_node.append(cur_node.self_node)
+                stack.append(node)
+                DFS(goal, close)
+
+
+def GreedySearch(start, goal):
+    open = [(start, 0)]
+    close = []
+
+    while goal not in close:
+        if open:
+            mini = min(open, key = lambda node: node[1])
+            open.remove(mini) 
+            cur_node = mini[0]
+            close.append(mini[0])  
+
+            for node in cur_node.neighbor_node:
+                cost = heuristic_3(node, goal)
+                if node not in close:
+                    open.append((node, cost))
+                    node.pre_node.append(cur_node.self_node)
+
+        else:
+            print('Can not find any way!')
+            break
+
+def UCS(goal, explore):
     mini = explore[0]
     for i in explore:
         if i.total_cost < mini.total_cost:
@@ -109,13 +152,17 @@ def UCS(start, goal, explore):
                 explore.append(i)
     if mini != goal:
         explore.remove(mini)
-        UCS(start, goal, explore)
+        UCS(goal, explore)
     else:
         return
 
 
 def heuristic_1(goal, now):  # khoang cach theo toa do
     return abs(goal.self_node[0] - now.self_node[0]) + abs(goal.self_node[1] - now.self_node[1]) + now.self_cost
+
+
+def heuristic_3(goal, now):
+    return math.dist(now.self_node, goal.self_node)
 
 
 def heuristic_2(mat, now, next_node):  # giai thuat bam tuong ben phai
@@ -152,46 +199,62 @@ def heuristic_2(mat, now, next_node):  # giai thuat bam tuong ben phai
 
 
 # - Astar
-def Astar(start, goal, now):
-    mini = now.neighbor_node[0]
-    for i in now.neighbor_node:
-        if heuristic_1(goal, i) < heuristic_1(goal, mini):
+def Astar(goal, explore):
+    mini = explore[0]
+    for i in explore:
+        if i.total_cost + heuristic_1(goal, i)< mini.total_cost + heuristic_1(goal, mini):
             mini = i
-
+    for i in mini.neighbor_node:
+        if mini.total_cost + i.self_cost < i.total_cost:
+            i.total_cost = mini.total_cost + i.self_cost
+            i.pre_node.append(mini.self_node)
+            if i.self_cost < 0:
+                i.self_cost = 1
+            if i not in explore:
+                explore.append(i)
     if mini != goal:
         explore.remove(mini)
-        UCS(start, goal, explore)
+        Astar(goal, explore)
     else:
         return
 
 
 def output_result(now, map):
-    if now == map.start_node:
-        now.element = 'o'
-        return
     now.element = 'o'
-    td = now.pre_node.pop(0)
+    if now == map.start_node:
+        return
+    td = now.pre_node.pop()
     output_result(map.matrix[td[0]][td[1]], map)
 
 
 explore = []
 
-
 def main():
     # - In ra ket qua
-    map = Map()
-    map.read_file2('input.txt')
-    map.print_matrix()
+    m.read_file2('input.txt')
+    m.print_matrix()
 
-    explore.append(map.start_node)
+    explore.append(m.start_node)
 
-    UCS(map.start_node, map.end_node, explore)
+    # UCS(m.end_node, explore)
 
-    output_result(map.end_node, map)
+    Astar(m.end_node, explore)
+
+    output_result(m.end_node, m)
 
     print()
+    # TEST THUAT TOAN DFS
+    # stack.append(m.start_node)
+    # close = []
+    # close.append(m.start_node)
+    # DFS(m.end_node, close)
+    # output_result(m.end_node, m)
 
-    map.print_matrix()
+    # TEST THUAT TOAN GREEDY BEST FIRST SEARCH
+    # GreedySearch(m.start_node, m.end_node)
+    # output_result(m.end_node, m)
+
+    m.print_matrix()
 
 
 main()
