@@ -96,7 +96,7 @@ class Map():
                 print(j.element, end='')
             print()
 
-# import stack_data
+
 stack = []
 m = Map()
 
@@ -137,7 +137,7 @@ def GreedySearch(start, goal):
             print('Can not find any way!')
             break
 
-def UCS(start, goal, explore):
+def UCS(goal, explore):
     mini = explore[0]
     for i in explore:
         if i.total_cost < mini.total_cost:
@@ -152,7 +152,7 @@ def UCS(start, goal, explore):
                 explore.append(i)
     if mini != goal:
         explore.remove(mini)
-        UCS(start, goal, explore)
+        UCS(goal, explore)
     else:
         return
 
@@ -199,15 +199,22 @@ def heuristic_2(mat, now, next_node):  # giai thuat bam tuong ben phai
 
 
 # - Astar
-def Astar(start, goal, now):
-    mini = now.neighbor_node[0]
-    for i in now.neighbor_node:
-        if heuristic_1(goal, i) < heuristic_1(goal, mini):
+def Astar(goal, explore):
+    mini = explore[0]
+    for i in explore:
+        if i.total_cost + heuristic_1(goal, i)< mini.total_cost + heuristic_1(goal, mini):
             mini = i
-
+    for i in mini.neighbor_node:
+        if mini.total_cost + i.self_cost < i.total_cost:
+            i.total_cost = mini.total_cost + i.self_cost
+            i.pre_node.append(mini.self_node)
+            if i.self_cost < 0:
+                i.self_cost = 1
+            if i not in explore:
+                explore.append(i)
     if mini != goal:
         explore.remove(mini)
-        UCS(start, goal, explore)
+        Astar(goal, explore)
     else:
         return
 
@@ -225,12 +232,17 @@ explore = []
 
 def main():
     # - In ra ket qua
+    m = Map()
     m.read_file2('input.txt')
     m.print_matrix()
 
-    # explore.append(m.start_node)
-    # UCS(m.start_node, m.end_node, explore)
-    # output_result(m.end_node, m)
+    explore.append(m.start_node)
+
+    # UCS(m.end_node, explore)
+
+    Astar(m.end_node, explore)
+
+    output_result(m.end_node, m)
 
     print()
     # TEST THUAT TOAN DFS
@@ -241,8 +253,8 @@ def main():
     # output_result(m.end_node, m)
 
     # TEST THUAT TOAN GREEDY BEST FIRST SEARCH
-    GreedySearch(m.start_node, m.end_node)
-    output_result(m.end_node, m)
+    # GreedySearch(m.start_node, m.end_node)
+    # output_result(m.end_node, m)
 
     m.print_matrix()
 
