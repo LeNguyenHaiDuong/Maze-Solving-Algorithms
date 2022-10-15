@@ -220,10 +220,9 @@ def Astar(goal, explore):
 
 
 def output_result(now, map):
-    if now == map.start_node:
-        now.element = 'o'
-        return
     now.element = 'o'
+    if now == map.start_node:
+        return
     td = now.pre_node.pop()
     output_result(map.matrix[td[0]][td[1]], map)
 
@@ -232,7 +231,6 @@ explore = []
 
 def main():
     # - In ra ket qua
-    m = Map()
     m.read_file2('input.txt')
     m.print_matrix()
 
