@@ -1,7 +1,8 @@
-# ref code:
-# https://colab.research.google.com/drive/1ejLc4LkrmjpbcRYC3W2xjfA0C0o1PWTp?usp=sharing#scrollTo=u5ZHJ1oq8Ucm
-# https://favtutor.com/blogs/breadth-first-search-python
-
+"""References:
+https://colab.research.google.com/drive/1ejLc4LkrmjpbcRYC3W2xjfA0C0o1PWTp?usp=sharing#scrollTo=u5ZHJ1oq8Ucm
+https://favtutor.com/blogs/breadth-first-search-python
+"""
+from heuristic import *
 import matplotlib.pyplot as plt
 
 
@@ -49,16 +50,16 @@ class Map():
                             counter += 1
                 # check neighbor node:
                 if self.matrix[i][j].is_path() and self.matrix[i][j] != self.end_node:
-                    if self.matrix[i - 1][j].is_path():
+                    if self.matrix[i - 1][j].is_path():  # up
                         self.matrix[i][j].neighbor_node.append(
                             self.matrix[i - 1][j])
-                    if self.matrix[i + 1][j].is_path():
+                    if self.matrix[i + 1][j].is_path():  # down
                         self.matrix[i][j].neighbor_node.append(
                             self.matrix[i + 1][j])
-                    if self.matrix[i][j - 1].is_path():
+                    if self.matrix[i][j - 1].is_path():  # left
                         self.matrix[i][j].neighbor_node.append(
                             self.matrix[i][j - 1])
-                    if self.matrix[i][j + 1].is_path():
+                    if self.matrix[i][j + 1].is_path():  # right
                         self.matrix[i][j].neighbor_node.append(
                             self.matrix[i][j + 1])
 
@@ -88,6 +89,15 @@ class Map():
                 print(j.element, end='')
             print()
 
+    def back_tracking(self, route, node):
+        cost = node.self_cost
+        while node.pre_node:
+            pre = node.pre_node.pop()
+            route.append(pre.self_node)
+            cost += pre.self_cost
+            node = pre
+        return cost
+
     def BFS(self):
         queue = []
         route = []
@@ -100,13 +110,7 @@ class Map():
             node = queue.pop(0)
             if node == self.end_node:
                 route.append(node.self_node)
-                cost += node.self_cost
-                # back-tracking:
-                while node.pre_node:
-                    pre = node.pre_node[0]
-                    route.append(pre.self_node)
-                    cost += pre.self_cost
-                    node = pre
+                cost = self.back_tracking(route, node)
             else:
                 for n in node.neighbor_node:
                     if n not in visited:
@@ -114,6 +118,54 @@ class Map():
                         queue.append(n)
                         n.pre_node.append(node)
         return route, cost
+
+    def DFS_Util(self, stack, goal, close):
+        if len(stack) != 0:
+            cur_node = stack.pop()
+            close.append(cur_node)
+
+            if cur_node is goal:
+                return
+
+            for node in cur_node.neighbor_node:
+                if node not in close:
+                    node.pre_node.append(cur_node)
+                    stack.append(node)
+                    self.DFS_Util(stack, goal, close)
+
+    def DFS(self):
+        stack = []
+        close = []
+        stack.append(self.start_node)
+        close.append(self.start_node)
+        self.DFS_Util(stack, self.end_node, close)
+        route = [self.end_node.self_node]
+        cost = self.back_tracking(route, self.end_node)
+        return route, cost
+
+    # def GBFS(self):
+    #     open = [(self.start_node, 0)]
+    #     close = []
+
+    #     while self.end_node not in close:
+    #         if open:
+    #             mini = min(open, key=lambda node: node[1])
+    #             open.remove(mini)
+    #             cur_node = mini[0]
+    #             close.append(mini[0])
+
+    #             for node in cur_node.neighbor_node:
+    #                 cost = heuristic_3(node, self.end_node)
+    #                 if node not in close:
+    #                     open.append((node, cost))
+    #                     node.pre_node.append(cur_node)
+    #         else:
+    #             print('Can not find any way!')
+    #             break
+
+    #         route = [self.end_node.self_node]
+    #         cost = self.back_tracking(route, self.end_node)
+    #         return route, cost
 
     def visualize_maze(self, route):
         bonus = [bn for bn in self.bonus_node]
@@ -172,10 +224,11 @@ class Map():
 
 def main():
     m = Map()
-    m.read_file('input2.txt')
-    route, cost = m.BFS()
+    m.read_file('input/level_1/input2.txt')
+    route, cost = m.DFS()
     m.write_file('output2.txt', route, cost)  # test
     m.visualize_maze(route)
 
 
-main()
+if __name__ == "__main__":
+    main()
