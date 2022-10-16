@@ -226,7 +226,7 @@ def main():
     m = Map()
     m.read_file('input/level_1/input2.txt')
     route, cost = m.DFS()
-    m.write_file('output2.txt', route, cost)  # test
+    m.write_file('output2.txt', route, cost)
     m.visualize_maze(route)
 
 
