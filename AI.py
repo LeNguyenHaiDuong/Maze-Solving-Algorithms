@@ -35,9 +35,7 @@ class Map():
                 # Chi phi cua node nay
                 if self.matrix[i][j].element == 'S':
                     self.matrix[i][j].self_cost = 0
-
-                # Danh sach lien ket
-                # luu cac dinh lan can co the di den
+                    
                 if self.matrix[i][j].is_path() and self.matrix[i][j] != self.end_node:
                     if self.matrix[i - 1][j].is_path():
                         self.matrix[i][j].neighbor_node.append(
@@ -51,6 +49,10 @@ class Map():
                     if self.matrix[i][j + 1].is_path():
                         self.matrix[i][j].neighbor_node.append(
                             self.matrix[i][j + 1])
+
+        # bonus node:
+        for (i, j, cost) in self.bonus_node:
+            self.matrix[i][j].self_cost = cost
 
     def read_file(self, file_path):
         fin = open(file_path, "r")
@@ -83,7 +85,7 @@ class Map():
         for i in range(len(matrix)):
             row = []
             for j in range(len(matrix[0])):
-                row.append(Node(matrix[i][j], (i, j)))
+                row.append(Node(matrix[i][j], [i, j]))
             self.matrix.append(row)
         f.close()
         self.bonus_node = bonus_points
@@ -124,12 +126,13 @@ def GreedySearch(start, goal):
         if open:
             mini = min(open, key = lambda node: node[1])
             open.remove(mini) 
+            print(f"({mini[0].self_node[0]}, {mini[0].self_node[1]})")
             cur_node = mini[0]
             close.append(mini[0])  
 
             for node in cur_node.neighbor_node:
-                cost = heuristic_3(node, goal)
                 if node not in close:
+                    cost = heuristic_1(goal, node)
                     open.append((node, cost))
                     node.pre_node.append(cur_node.self_node)
 
@@ -137,13 +140,14 @@ def GreedySearch(start, goal):
             print('Can not find any way!')
             break
 
-def UCS(goal, explore):
+
+def UCS(goal, explore, close):
     mini = explore[0]
     for i in explore:
         if i.total_cost < mini.total_cost:
             mini = i
     for i in mini.neighbor_node:
-        if mini.total_cost + i.self_cost < i.total_cost:
+        if i not in close and mini.total_cost + i.self_cost < i.total_cost:
             i.total_cost = mini.total_cost + i.self_cost
             i.pre_node.append(mini.self_node)
             if i.self_cost < 0:
@@ -151,18 +155,19 @@ def UCS(goal, explore):
             if i not in explore:
                 explore.append(i)
     if mini != goal:
+        close.append(mini)
         explore.remove(mini)
-        UCS(goal, explore)
+        UCS(goal, explore, close)
     else:
         return
-
+        
 
 def heuristic_1(goal, now):  # khoang cach theo toa do
     return abs(goal.self_node[0] - now.self_node[0]) + abs(goal.self_node[1] - now.self_node[1]) + now.self_cost
 
 
 def heuristic_3(goal, now):
-    return math.dist(now.self_node, goal.self_node)
+    return math.dist(now.self_node, goal.self_node) + now.self_cost
 
 
 def heuristic_2(mat, now, next_node):  # giai thuat bam tuong ben phai
@@ -199,13 +204,13 @@ def heuristic_2(mat, now, next_node):  # giai thuat bam tuong ben phai
 
 
 # - Astar
-def Astar(goal, explore):
+def Astar(goal, explore, close):
     mini = explore[0]
     for i in explore:
         if i.total_cost + heuristic_1(goal, i)< mini.total_cost + heuristic_1(goal, mini):
             mini = i
     for i in mini.neighbor_node:
-        if mini.total_cost + i.self_cost < i.total_cost:
+        if i not in close and mini.total_cost + i.self_cost < i.total_cost:
             i.total_cost = mini.total_cost + i.self_cost
             i.pre_node.append(mini.self_node)
             if i.self_cost < 0:
@@ -213,8 +218,9 @@ def Astar(goal, explore):
             if i not in explore:
                 explore.append(i)
     if mini != goal:
+        close.append(mini)
         explore.remove(mini)
-        Astar(goal, explore)
+        Astar(goal, explore, close)
     else:
         return
 
@@ -231,15 +237,17 @@ explore = []
 
 def main():
     # - In ra ket qua
-    m.read_file2('input.txt')
+    m.read_file2('input1.txt')
     m.print_matrix()
 
     explore.append(m.start_node)
 
-    # UCS(m.end_node, explore)
+    # TEST THUAT TOAN UCS
+    # UCS(m.end_node, explore, [])
+    # output_result(m.end_node, m)
 
-    Astar(m.end_node, explore)
-
+    # TEST THUAT TOAN A*
+    Astar(m.end_node, explore, [])
     output_result(m.end_node, m)
 
     print()
