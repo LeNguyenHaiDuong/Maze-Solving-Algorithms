@@ -49,30 +49,33 @@ class Map():
                     if self.matrix[i][j + 1].is_path():
                         self.matrix[i][j].neighbor_node.append(
                             self.matrix[i][j + 1])
-
         # bonus node:
         for (i, j, cost) in self.bonus_node:
             self.matrix[i][j].self_cost = cost
 
-    def read_file(self, file_path):
-        fin = open(file_path, "r")
-        data = fin.read()
-        p = []
-        row = 0
-        column = 0
-        for i in data:
-            if i != '\n':
-                p.append(Node(i, [row, column]))
-                column += 1
-            else:
-                self.matrix.append(p)
-                p = []
-                column = 0
-                row += 1
-        self.set_map()
-        return self
 
-    def read_file2(self, file_path):
+    def reset_map(self):
+        for row in self.matrix:
+            for j in row:
+                # cap nhat pre_node
+                j.pre_node = []
+                # cap nhat total_cost
+                j.total_cost = 1000000
+                # cap nhat nhung diem co ki tu 'o' thanh ' '
+                if j.element == 'o':
+                    j.element = ' '
+
+        # bonus node:
+        for (i, j, cost) in self.bonus_node:
+            self.matrix[i][j].element = '+'
+            self.matrix[i][j].self_cost = cost
+
+        # cap nhat diem dau
+        self.start_node.element = 'S'
+        self.start_node.total_cost = 0
+
+
+    def read_file(self, file_path):
         f = open(file_path, 'r')
         n_bonus_points = int(next(f)[:-1])
         bonus_points = []
@@ -118,6 +121,7 @@ def DFS(goal, close):
                 DFS(goal, close)
 
 
+
 def GreedySearch(start, goal):
     open = [(start, 0)]
     close = []
@@ -126,7 +130,6 @@ def GreedySearch(start, goal):
         if open:
             mini = min(open, key = lambda node: node[1])
             open.remove(mini) 
-            print(f"({mini[0].self_node[0]}, {mini[0].self_node[1]})")
             cur_node = mini[0]
             close.append(mini[0])  
 
@@ -137,11 +140,11 @@ def GreedySearch(start, goal):
                     node.pre_node.append(cur_node.self_node)
 
         else:
-            print('Can not find any way!')
-            break
-
+            return
 
 def UCS(goal, explore, close):
+    if not explore:
+        return 
     mini = explore[0]
     for i in explore:
         if i.total_cost < mini.total_cost:
@@ -205,6 +208,8 @@ def heuristic_2(mat, now, next_node):  # giai thuat bam tuong ben phai
 
 # - Astar
 def Astar(goal, explore, close):
+    if not explore:
+        return 
     mini = explore[0]
     for i in explore:
         if i.total_cost + heuristic_1(goal, i)< mini.total_cost + heuristic_1(goal, mini):
@@ -233,36 +238,54 @@ def output_result(now, map):
     output_result(map.matrix[td[0]][td[1]], map)
 
 
-explore = []
+def print_result(m):
+    if m.end_node.pre_node:
+        output_result(m.end_node, m)    
+        m.print_matrix()
+        print('\n')
+    else:
+        print('Can not find any way!\n')
+
+    m.reset_map()
+
 
 def main():
     # - In ra ket qua
-    m.read_file2('input1.txt')
-    m.print_matrix()
+    m.read_file('input1.txt')
+    # m.print_matrix()
 
-    explore.append(m.start_node)
 
     # TEST THUAT TOAN UCS
-    # UCS(m.end_node, explore, [])
-    # output_result(m.end_node, m)
+    print('UCS ALGORITHM')
+    explore = []
+    explore.append(m.start_node)
+    UCS(m.end_node, explore, [])
+    print_result(m)
 
-    # TEST THUAT TOAN A*
-    Astar(m.end_node, explore, [])
-    output_result(m.end_node, m)
 
-    print()
     # TEST THUAT TOAN DFS
-    # stack.append(m.start_node)
-    # close = []
-    # close.append(m.start_node)
-    # DFS(m.end_node, close)
-    # output_result(m.end_node, m)
+    stack.append(m.start_node)
+    close = []
+    close.append(m.start_node)
+    print('DFS ALGORITHM')
+    DFS(m.end_node, close)
+    print_result(m)
+
 
     # TEST THUAT TOAN GREEDY BEST FIRST SEARCH
-    # GreedySearch(m.start_node, m.end_node)
-    # output_result(m.end_node, m)
+    print('GBFS ALGORITHM')
+    GreedySearch(m.start_node, m.end_node)
+    print_result(m)
 
-    m.print_matrix()
+
+    # TEST THUAT TOAN A*
+    print('A* ALGORITHM')
+    explore = []
+    explore.append(m.start_node)
+    Astar(m.end_node, explore, [])
+    print_result(m)
+
+
 
 
 main()
