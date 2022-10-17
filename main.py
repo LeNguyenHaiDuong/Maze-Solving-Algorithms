@@ -94,7 +94,7 @@ class Map():
         while node.pre_node:
             pre = node.pre_node.pop()
             route.append(pre.self_node)
-            cost += pre.self_cost
+            cost += pre.self_cost  # sai cost khi ucs: cost = self.total_cost
             node = pre
         return cost
 
@@ -167,6 +167,25 @@ class Map():
     #         cost = self.back_tracking(route, self.end_node)
     #         return route, cost
 
+    def UCS(self, goal, explore):
+        mini = explore[0]
+        for i in explore:
+            if i.total_cost < mini.total_cost:
+                mini = i
+        for i in mini.neighbor_node:
+            if mini.total_cost + i.self_cost < i.total_cost:
+                i.total_cost = mini.total_cost + i.self_cost
+                i.pre_node.append(mini.self_node)
+                if i.self_cost < 0:
+                    i.self_cost = 1
+                if i not in explore:
+                    explore.append(i)
+        if mini != goal:
+            explore.remove(mini)
+            self.UCS(goal, explore)
+        else:
+            return
+
     def visualize_maze(self, route):
         bonus = [bn for bn in self.bonus_node]
         start = self.start_node.self_node
@@ -224,8 +243,8 @@ class Map():
 
 def main():
     m = Map()
-    m.read_file('input/level_1/input2.txt')
-    route, cost = m.DFS()
+    m.read_file('input/level_2/input1.txt')
+    route, cost = m.UCS()
     m.write_file('output2.txt', route, cost)
     m.visualize_maze(route)
 
