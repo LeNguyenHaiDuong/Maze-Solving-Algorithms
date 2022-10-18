@@ -89,35 +89,18 @@ class Map():
                 print(j.element, end='')
             print()
 
-    def back_tracking(self, route, node):
-        cost = node.self_cost
+    def back_tracking_route(self, route, node, total_cost=None):
+        if total_cost:
+            cost = total_cost
+        else:
+            cost = node.self_cost
         while node.pre_node:
             pre = node.pre_node.pop()
             route.append(pre.self_node)
-            cost += pre.self_cost  # sai cost khi ucs: cost = self.total_cost
+            if total_cost is None:
+                cost += pre.self_cost
             node = pre
         return cost
-
-    def BFS(self):
-        queue = []
-        route = []
-        visited = []
-        visited.append(self.start_node)
-        queue.append(self.start_node)
-        cost = 0
-
-        while queue:
-            node = queue.pop(0)
-            if node == self.end_node:
-                route.append(node.self_node)
-                cost = self.back_tracking(route, node)
-            else:
-                for n in node.neighbor_node:
-                    if n not in visited:
-                        visited.append(n)
-                        queue.append(n)
-                        n.pre_node.append(node)
-        return route, cost
 
     def DFS_Util(self, stack, goal, close):
         if len(stack) != 0:
@@ -140,51 +123,111 @@ class Map():
         close.append(self.start_node)
         self.DFS_Util(stack, self.end_node, close)
         route = [self.end_node.self_node]
-        cost = self.back_tracking(route, self.end_node)
+        cost = self.back_tracking_route(route, self.end_node)
         return route, cost
 
-    # def GBFS(self):
-    #     open = [(self.start_node, 0)]
-    #     close = []
+    def BFS(self):
+        queue = []
+        route = []
+        visited = []
+        visited.append(self.start_node)
+        queue.append(self.start_node)
+        cost = 0
 
-    #     while self.end_node not in close:
-    #         if open:
-    #             mini = min(open, key=lambda node: node[1])
-    #             open.remove(mini)
-    #             cur_node = mini[0]
-    #             close.append(mini[0])
+        while queue:
+            node = queue.pop(0)
+            if node == self.end_node:
+                route.append(node.self_node)
+                cost = self.back_tracking_route(route, node)
+            else:
+                for n in node.neighbor_node:
+                    if n not in visited:
+                        visited.append(n)
+                        queue.append(n)
+                        n.pre_node.append(node)
+        return route, cost
 
-    #             for node in cur_node.neighbor_node:
-    #                 cost = heuristic_3(node, self.end_node)
-    #                 if node not in close:
-    #                     open.append((node, cost))
-    #                     node.pre_node.append(cur_node)
-    #         else:
-    #             print('Can not find any way!')
-    #             break
-
-    #         route = [self.end_node.self_node]
-    #         cost = self.back_tracking(route, self.end_node)
-    #         return route, cost
-
-    def UCS(self, goal, explore):
+    def UCS_Util(self, goal, explore, close):
+        if not explore:
+            return
         mini = explore[0]
         for i in explore:
             if i.total_cost < mini.total_cost:
                 mini = i
         for i in mini.neighbor_node:
-            if mini.total_cost + i.self_cost < i.total_cost:
+            if i not in close and mini.total_cost + i.self_cost < i.total_cost:
                 i.total_cost = mini.total_cost + i.self_cost
-                i.pre_node.append(mini.self_node)
-                if i.self_cost < 0:
-                    i.self_cost = 1
+                i.pre_node.append(mini)
                 if i not in explore:
                     explore.append(i)
         if mini != goal:
+            close.append(mini)
             explore.remove(mini)
-            self.UCS(goal, explore)
+            self.UCS_Util(goal, explore, close)
         else:
             return
+
+    def UCS(self):
+        explore = []
+        explore.append(self.start_node)
+        self.UCS_Util(self.end_node, explore, [])
+        route = [self.end_node.self_node]
+        cost = self.back_tracking_route(
+            route, self.end_node, self.end_node.total_cost)
+        return route, cost
+
+    def GBFS(self):
+        open = [(self.start_node, 0)]
+        close = []
+
+        while self.end_node not in close:
+            if open:
+                # get the mini node which having min cost
+                mini = min(open, key=lambda node: node[1])
+                open.remove(mini)
+                cur_node = mini[0]
+                close.append(mini[0])
+
+                for node in cur_node.neighbor_node:
+                    if node not in close:
+                        cost = heuristic_1(self.end_node, node)
+                        open.append((node, cost))
+                        node.pre_node.append(cur_node)
+            else:
+                break
+
+        route = [self.end_node.self_node]
+        cost = self.back_tracking_route(route, self.end_node)
+        return route, cost
+
+    def Astar_Util(self, goal, explore, close):
+        if not explore:
+            return
+        mini = explore[0]
+        for i in explore:
+            if i.total_cost + heuristic_1(goal, i) < mini.total_cost + heuristic_1(goal, mini):
+                mini = i
+        for i in mini.neighbor_node:
+            if i not in close and mini.total_cost + i.self_cost < i.total_cost:
+                i.total_cost = mini.total_cost + i.self_cost
+                i.pre_node.append(mini)
+                if i not in explore:
+                    explore.append(i)
+        if mini != goal:
+            close.append(mini)
+            explore.remove(mini)
+            self.Astar_Util(goal, explore, close)
+        else:
+            return
+
+    def Astar(self):
+        explore = []
+        explore.append(self.start_node)
+        self.Astar_Util(self.end_node, explore, [])
+        route = [self.end_node.self_node]
+        cost = self.back_tracking_route(
+            route, self.end_node, self.end_node.total_cost)
+        return route, cost
 
     def visualize_maze(self, route):
         bonus = [bn for bn in self.bonus_node]
@@ -199,9 +242,9 @@ class Map():
             direction = []
             for i in range(1, len(route)):
                 if route[i][0]-route[i-1][0] > 0:
-                    direction.append('^')  # ^
+                    direction.append('^')
                 elif route[i][0]-route[i-1][0] < 0:
-                    direction.append('v')  # v
+                    direction.append('v')
                 elif route[i][1]-route[i-1][1] > 0:
                     direction.append('<')
                 else:
@@ -240,12 +283,23 @@ class Map():
         with open(file_path, 'w') as f:
             f.write(str(cost)) if route else f.write('NO')
 
+    def reset_map(self):
+        for row in self.matrix:
+            for j in row:
+                if j is self.start_node:
+                    continue
+                j.pre_node = []
+                j.total_cost = 1000000
+
 
 def main():
     m = Map()
-    m.read_file('input/level_2/input1.txt')
+    m.read_file('input.txt')
+    route, cost = m.Astar()
+    m.write_file('output1.txt', route, cost)  # 8
+    m.reset_map()
     route, cost = m.UCS()
-    m.write_file('output2.txt', route, cost)
+    m.write_file('output2.txt', route, cost)  # 8
     m.visualize_maze(route)
 
 
