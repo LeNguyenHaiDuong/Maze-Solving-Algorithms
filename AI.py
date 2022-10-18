@@ -35,7 +35,7 @@ class Map():
                 # Chi phi cua node nay
                 if self.matrix[i][j].element == 'S':
                     self.matrix[i][j].self_cost = 0
-                    
+
                 if self.matrix[i][j].is_path() and self.matrix[i][j] != self.end_node:
                     if self.matrix[i - 1][j].is_path():
                         self.matrix[i][j].neighbor_node.append(
@@ -52,7 +52,6 @@ class Map():
         # bonus node:
         for (i, j, cost) in self.bonus_node:
             self.matrix[i][j].self_cost = cost
-
 
     def reset_map(self):
         for row in self.matrix:
@@ -73,7 +72,6 @@ class Map():
         # cap nhat diem dau
         self.start_node.element = 'S'
         self.start_node.total_cost = 0
-
 
     def read_file(self, file_path):
         f = open(file_path, 'r')
@@ -121,17 +119,16 @@ def DFS(goal, close):
                 DFS(goal, close)
 
 
-
 def GreedySearch(start, goal):
     open = [(start, 0)]
     close = []
 
     while goal not in close:
         if open:
-            mini = min(open, key = lambda node: node[1])
-            open.remove(mini) 
+            mini = min(open, key=lambda node: node[1])
+            open.remove(mini)
             cur_node = mini[0]
-            close.append(mini[0])  
+            close.append(mini[0])
 
             for node in cur_node.neighbor_node:
                 if node not in close:
@@ -142,9 +139,10 @@ def GreedySearch(start, goal):
         else:
             return
 
+
 def UCS(goal, explore, close):
     if not explore:
-        return 
+        return
     mini = explore[0]
     for i in explore:
         if i.total_cost < mini.total_cost:
@@ -163,7 +161,7 @@ def UCS(goal, explore, close):
         UCS(goal, explore, close)
     else:
         return
-        
+
 
 def heuristic_1(goal, now):  # khoang cach theo toa do
     return abs(goal.self_node[0] - now.self_node[0]) + abs(goal.self_node[1] - now.self_node[1]) + now.self_cost
@@ -209,10 +207,10 @@ def heuristic_2(mat, now, next_node):  # giai thuat bam tuong ben phai
 # - Astar
 def Astar(goal, explore, close):
     if not explore:
-        return 
+        return
     mini = explore[0]
     for i in explore:
-        if i.total_cost + heuristic_1(goal, i)< mini.total_cost + heuristic_1(goal, mini):
+        if i.total_cost + heuristic_1(goal, i) < mini.total_cost + heuristic_1(goal, mini):
             mini = i
     for i in mini.neighbor_node:
         if i not in close and mini.total_cost + i.self_cost < i.total_cost:
@@ -240,7 +238,7 @@ def output_result(now, map):
 
 def print_result(m):
     if m.end_node.pre_node:
-        output_result(m.end_node, m)    
+        output_result(m.end_node, m)
         m.print_matrix()
         print('\n')
     else:
@@ -254,14 +252,12 @@ def main():
     m.read_file('input1.txt')
     # m.print_matrix()
 
-
     # TEST THUAT TOAN UCS
     print('UCS ALGORITHM')
     explore = []
     explore.append(m.start_node)
     UCS(m.end_node, explore, [])
     print_result(m)
-
 
     # TEST THUAT TOAN DFS
     stack.append(m.start_node)
@@ -271,12 +267,10 @@ def main():
     DFS(m.end_node, close)
     print_result(m)
 
-
     # TEST THUAT TOAN GREEDY BEST FIRST SEARCH
     print('GBFS ALGORITHM')
     GreedySearch(m.start_node, m.end_node)
     print_result(m)
-
 
     # TEST THUAT TOAN A*
     print('A* ALGORITHM')
@@ -284,8 +278,6 @@ def main():
     explore.append(m.start_node)
     Astar(m.end_node, explore, [])
     print_result(m)
-
-
 
 
 main()

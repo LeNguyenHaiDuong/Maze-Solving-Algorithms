@@ -1,4 +1,5 @@
 import math
+import os
 
 
 def heuristic_1(goal, now):  # khoang cach theo toa do
@@ -40,3 +41,17 @@ def heuristic_2(mat, now, next_node):  # giai thuat bam tuong ben phai
 
 def heuristic_3(goal, now):
     return math.dist(now.self_node, goal.self_node)
+
+
+def create_output_folder():
+    try:
+        os.mkdir('output')
+    except:
+        pass
+    finally:
+        try:
+            os.mkdir('output/level_1')
+            os.mkdir('output/level_2')
+            os.mkdir('output/advance')
+        except:
+            pass

@@ -2,8 +2,9 @@
 https://colab.research.google.com/drive/1ejLc4LkrmjpbcRYC3W2xjfA0C0o1PWTp?usp=sharing#scrollTo=u5ZHJ1oq8Ucm
 https://favtutor.com/blogs/breadth-first-search-python
 """
-from heuristic import *
+from helper import *
 import matplotlib.pyplot as plt
+import os
 
 
 class Node():
@@ -73,11 +74,14 @@ class Map():
 
         text = f.read()
         matrix = [list(i) for i in text.splitlines()]
-        for i in range(len(matrix)):
-            row = []
-            for j in range(len(matrix[0])):
-                row.append(Node(matrix[i][j], (i, j)))
-            self.matrix.append(row)
+        try:
+            for i in range(len(matrix)):
+                row = []
+                for j in range(len(matrix[0])):
+                    row.append(Node(matrix[i][j], (i, j)))
+                self.matrix.append(row)
+        except:
+            pass
         f.close()
         self.bonus_node = bonus_points
         self.set_map()
@@ -229,7 +233,8 @@ class Map():
             route, self.end_node, self.end_node.total_cost)
         return route, cost
 
-    def visualize_maze(self, route):
+    def visualize_maze(self, route, file_path):
+        file_path += '.jpg'
         bonus = [bn for bn in self.bonus_node]
         start = self.start_node.self_node
         end = self.end_node.self_node
@@ -238,7 +243,7 @@ class Map():
         walls = [(i, j) for i in range(len(self.matrix))
                  for j in range(len(self.matrix[0])) if self.matrix[i][j].element == 'x']
 
-        if route:
+        if len(route) > 1:
             direction = []
             for i in range(1, len(route)):
                 if route[i][0]-route[i-1][0] > 0:
@@ -277,11 +282,13 @@ class Map():
                  verticalalignment='center')
         plt.xticks([])
         plt.yticks([])
-        plt.show()
+        plt.savefig(file_path)
+        # plt.show()
 
     def write_file(self, file_path, route, cost):
+        file_path += '.txt'
         with open(file_path, 'w') as f:
-            f.write(str(cost)) if route else f.write('NO')
+            f.write(str(cost)) if len(route) > 1 else f.write('NO')
 
     def reset_map(self):
         for row in self.matrix:
@@ -293,14 +300,28 @@ class Map():
 
 
 def main():
-    m = Map()
-    m.read_file('input.txt')
-    route, cost = m.Astar()
-    m.write_file('output1.txt', route, cost)  # 8
-    m.reset_map()
-    route, cost = m.UCS()
-    m.write_file('output2.txt', route, cost)  # 8
-    m.visualize_maze(route)
+    create_output_folder()
+    input_folder = ['input/level_1', 'input/level_2', 'input/advance']
+    for path in input_folder:
+        for filename in os.listdir(path):
+            input_file = os.path.join(path, filename)
+            m = Map()
+            m.read_file(input_file)
+            output_folder = input_file.replace("in", "out")
+            output_folder = output_folder[:-4]  # delete extension
+            try:
+                os.mkdir(output_folder)
+            except:
+                pass
+
+            list_algo = [m.DFS, m.BFS, m.UCS, m.GBFS, m.Astar]
+            list_name = ['DFS', 'BFS', 'UCS', 'GBFS', 'Astar']
+            for i in range(5):
+                route, cost = list_algo[i]()
+                output_file = os.path.join(output_folder, list_name[i])
+                m.write_file(output_file, route, cost)
+                m.visualize_maze(route, output_file)
+                m.reset_map()
 
 
 if __name__ == "__main__":
