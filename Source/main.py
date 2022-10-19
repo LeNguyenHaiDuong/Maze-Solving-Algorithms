@@ -1,20 +1,25 @@
+"""TEST TELEPORTATION"""
 """References:
 https://colab.research.google.com/drive/1ejLc4LkrmjpbcRYC3W2xjfA0C0o1PWTp?usp=sharing#scrollTo=u5ZHJ1oq8Ucm
 https://favtutor.com/blogs/breadth-first-search-python
 """
+
+
+
+
 from helper import *
 import matplotlib.pyplot as plt
 import os
-
-
+import numpy as np
+import matplotlib.cm as cm
 class Node():
     def __init__(self, ele, pos):
-        self.pre_node = []  # node truoc
-        self.self_node = pos  # toa do cua node
-        self.element = ele  # thuoc tinh node ('x', ' ', '+', 'S', 'E')
-        self.total_cost = 1000000  # tong chi phi tu start den node nay
-        self.self_cost = 1  # chi phi khi di chuyen den node nay
-        self.neighbor_node = []  # node lan can co the di chuyen toi
+        self.pre_node = []  # node trước nó
+        self.self_node = pos  # tọa độ của node
+        self.element = ele  # giá trị phần tử ('x', ' ', '+', 'S')
+        self.total_cost = 1000000  # tổng chi phí từ start node
+        self.self_cost = 1  # chi phí khi di chuyển đến node này
+        self.neighbor_node = []  # node lân cận có thể di chuyển
 
     def is_path(self):
         if self.element == 'x':
@@ -22,13 +27,18 @@ class Node():
         else:
             return True
 
+    def move(self, move_node):  # teleportation
+        self.neighbor_node = move_node.neighbor_node
+
 
 class Map():
     def __init__(self):
         self.matrix = []
         self.start_node = None
         self.end_node = None  # lối ra
-        self.bonus_node = []
+        self.bonus_node = []  # điểm cộng
+        # dịch chuyển tức thời (key: int, value: [posA,posB])
+        self.tele_node = dict()
 
     def set_map(self):
         counter = 0
@@ -64,13 +74,28 @@ class Map():
                         self.matrix[i][j].neighbor_node.append(
                             self.matrix[i][j + 1])
 
+        # tele node: cập nhật neighbor node của node xa thành neighbor node của node gần
+        for key in self.tele_node:
+            dis0 = heuristic_1(self.end_node, self.tele_node[key][0])
+            dis1 = heuristic_1(self.end_node, self.tele_node[key][1])
+            if dis0 > dis1:  # sửa ds kề của thằng kề cửa vô :>>> a*, lỡ bít đường
+                self.tele_node[key][0].move(self.tele_node[key][1])
+            else:
+                self.tele_node[key][1].move(self.tele_node[key][0])
+
     def read_file(self, file_path):
         f = open(file_path, 'r')
-        n_bonus_points = int(next(f)[:-1])
-        bonus_points = []
-        for i in range(n_bonus_points):
-            x, y, reward = map(int, next(f)[:-1].split(' '))
-            bonus_points.append((x, y, reward))
+        n_special_points = int(next(f)[:-1])
+        tele_pos = dict()  # temp dict saving pos of tele node
+
+        for i in range(n_special_points):  # bonus_node or tele_node
+            x, y, special = map(int, next(f)[:-1].split(' '))
+            if special < 0:
+                self.bonus_node.append((x, y, special))
+            elif tele_pos.get(special):  # có tồn tại phần tử trước đó rồi
+                tele_pos[special].append((x, y))
+            else:
+                tele_pos[special] = [(x, y)]
 
         text = f.read()
         matrix = [list(i) for i in text.splitlines()]
@@ -82,8 +107,16 @@ class Map():
                 self.matrix.append(row)
         except:
             pass
+
+        # APPEND node which pos is tele_pos TO self.tele_node:
+        for key in tele_pos:
+            posA = tele_pos[key][0]
+            posB = tele_pos[key][1]
+            nodeA = self.matrix[posA[0]][posA[1]]
+            nodeB = self.matrix[posB[0]][posB[1]]
+            self.tele_node[key] = [nodeA, nodeB]
+
         f.close()
-        self.bonus_node = bonus_points
         self.set_map()
         print()
 
@@ -236,6 +269,11 @@ class Map():
     def visualize_maze(self, route, file_path):
         file_path += '.jpg'
         bonus = [bn for bn in self.bonus_node]
+        tele = []
+
+        for key in self.tele_node:
+            tele.append([self.tele_node[key][0].self_node, self.tele_node[key][1].self_node])
+
         start = self.start_node.self_node
         end = self.end_node.self_node
 
@@ -272,6 +310,12 @@ class Map():
         plt.scatter(start[1], -start[0], marker='*',
                     s=100, color='gold')
 
+        colors = iter(cm.rainbow(np.linspace(0, 1, len(tele))))
+
+        for t in tele:  # [[(x1,y1), (x2,y2)], [(), ()], [(), ()]]
+            plt.scatter([i[1] for i in t], [-i[0] for i in t],
+                        marker='H', s=100, color=next(colors))
+
         if route:
             for i in range(len(route)-2):
                 plt.scatter(route[i+1][1], -route[i+1][0],
@@ -283,7 +327,6 @@ class Map():
         plt.xticks([])
         plt.yticks([])
         plt.savefig(file_path)
-        # plt.show()
 
     def write_file(self, file_path, route, cost):
         file_path += '.txt'
@@ -299,29 +342,39 @@ class Map():
                 j.total_cost = 1000000
 
 
-def main():
-    create_output_folder()
-    input_folder = ['input/level_1', 'input/level_2', 'input/advance']
-    for path in input_folder:
-        for filename in os.listdir(path):
-            input_file = os.path.join(path, filename)
-            m = Map()
-            m.read_file(input_file)
-            output_folder = input_file.replace("in", "out")
-            output_folder = output_folder[:-4]  # delete extension
-            try:
-                os.mkdir(output_folder)
-            except:
-                pass
+def main(): """XEM LẠI KỊCH BẢN HÀM MAIN !!! (bản đồ bonus, advance?)"""
+# create_output_folder()
+# input_folder = ['input/level_1', 'input/level_2', 'input/advance']
+# for path in input_folder:
+#     for filename in os.listdir(path):
+#         input_file = os.path.join(path, filename)
+#         m = Map()
+#         m.read_file(input_file)
+#         output_folder = input_file.replace("in", "out")
+#         output_folder = output_folder[:-4]  # delete extension
+#         try:
+#             os.mkdir(output_folder)
+#         except:
+#             pass
 
-            list_algo = [m.DFS, m.BFS, m.UCS, m.GBFS, m.Astar]
-            list_name = ['DFS', 'BFS', 'UCS', 'GBFS', 'Astar']
-            for i in range(5):
-                route, cost = list_algo[i]()
-                output_file = os.path.join(output_folder, list_name[i])
-                m.write_file(output_file, route, cost)
-                m.visualize_maze(route, output_file)
-                m.reset_map()
+#         list_algo = [m.DFS, m.BFS, m.UCS, m.GBFS, m.Astar]
+#         list_name = ['DFS', 'BFS', 'UCS', 'GBFS', 'Astar']
+#         for i in range(5):
+#             route, cost = list_algo[i]()
+#             output_file = os.path.join(output_folder, list_name[i])
+#             m.write_file(output_file, route, cost)
+#             m.visualize_maze(route, output_file)
+#             m.reset_map()
+
+
+# test tele node:
+input_file = 'input/advance/input1.txt'
+m = Map()
+m.read_file(input_file)
+route, cost = m.Astar()
+output_file = 'advance1'
+m.write_file(output_file, route, cost)
+m.visualize_maze(route, output_file)
 
 
 if __name__ == "__main__":
