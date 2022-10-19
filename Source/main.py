@@ -77,11 +77,13 @@ class Map():
         # tele node: hoán đổi vị trí cửa đi tới
         for key in self.tele_node:
             for i in self.tele_node[key][0].neighbor_node:
-                i.neighbor_node.remove(self.tele_node[key][0])
-                i.neighbor_node.append(self.tele_node[key][1])
+                if self.tele_node[key][0] in i.neighbor_node:
+                    i.neighbor_node.remove(self.tele_node[key][0])
+                    i.neighbor_node.append(self.tele_node[key][1])
             for i in self.tele_node[key][1].neighbor_node:
-                i.neighbor_node.remove(self.tele_node[key][1])
-                i.neighbor_node.append(self.tele_node[key][0])
+                if self.tele_node[key][1] in i.neighbor_node:
+                    i.neighbor_node.remove(self.tele_node[key][1])
+                    i.neighbor_node.append(self.tele_node[key][0])
 
     def read_file(self, file_path):
         f = open(file_path, 'r')
