@@ -76,14 +76,24 @@ class Map():
 
         # tele node: hoán đổi vị trí cửa đi tới
         for key in self.tele_node:
-            for i in self.tele_node[key][0].neighbor_node:
-                if self.tele_node[key][0] in i.neighbor_node:
-                    i.neighbor_node.remove(self.tele_node[key][0])
-                    i.neighbor_node.append(self.tele_node[key][1])
-            for i in self.tele_node[key][1].neighbor_node:
-                if self.tele_node[key][1] in i.neighbor_node:
-                    i.neighbor_node.remove(self.tele_node[key][1])
-                    i.neighbor_node.append(self.tele_node[key][0])
+            # Cách 1: từ cái mới hôm qua cải tiến lại nhưng có thể bị lỗi
+#             for i in self.tele_node[key][0].neighbor_node:
+#                 if self.tele_node[key][0] in i.neighbor_node:
+#                     i.neighbor_node.remove(self.tele_node[key][0])
+#                     i.neighbor_node.append(self.tele_node[key][1])
+#             for i in self.tele_node[key][1].neighbor_node:
+#                 if self.tele_node[key][1] in i.neighbor_node:
+#                     i.neighbor_node.remove(self.tele_node[key][1])
+#                     i.neighbor_node.append(self.tele_node[key][0])
+           
+            # Cách 2: swap cả danh sách kề và cả self_node, cách này chắc ăn hơn
+            temp = self.tele_node[key][0].neighbor_node
+            self.tele_node[key][0].neighbor_node = self.tele_node[key][1].neighbor_node
+            self.tele_node[key][1].neighbor_node = temp
+            
+            temp = self.tele_node[key][0].self_node
+            self.tele_node[key][0].self_node = self.tele_node[key][1].self_node
+            self.tele_node[key][1].self_node = temp
 
     def read_file(self, file_path):
         f = open(file_path, 'r')
