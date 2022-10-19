@@ -37,7 +37,7 @@ class Map():
         self.start_node = None
         self.end_node = None  # lối ra
         self.bonus_node = []  # điểm cộng
-        # dịch chuyển tức thời (key: int, value: [posA,posB])
+        # dịch chuyển tức thời (key: int, value: [nodeA, nodeB])
         self.tele_node = dict()
 
     def set_map(self):
@@ -74,14 +74,14 @@ class Map():
                         self.matrix[i][j].neighbor_node.append(
                             self.matrix[i][j + 1])
 
-        # tele node: cập nhật neighbor node của node xa thành neighbor node của node gần
+        # tele node: hoán đổi vị trí cửa đi tới
         for key in self.tele_node:
-            dis0 = heuristic_1(self.end_node, self.tele_node[key][0])
-            dis1 = heuristic_1(self.end_node, self.tele_node[key][1])
-            if dis0 > dis1:  # sửa ds kề của thằng kề cửa vô :>>> a*, lỡ bít đường
-                self.tele_node[key][0].move(self.tele_node[key][1])
-            else:
-                self.tele_node[key][1].move(self.tele_node[key][0])
+            for i in self.tele_node[key][0].neighbor_node:
+                i.neighbor_node.remove(self.tele_node[key][0])
+                i.neighbor_node.append(self.tele_node[key][1])
+            for i in self.tele_node[key][1].neighbor_node:
+                i.neighbor_node.remove(self.tele_node[key][1])
+                i.neighbor_node.append(self.tele_node[key][0])
 
     def read_file(self, file_path):
         f = open(file_path, 'r')
