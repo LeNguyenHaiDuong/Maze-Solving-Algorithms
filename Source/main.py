@@ -409,11 +409,11 @@ def main():
     """FOR FAST TESTING:"""
     # TEST NEW ALGO CỦA DƯƠNG:
 
-    input_file = 'input/level_2/input3.txt'
+    input_file = 'Duong_input.txt'
     m = Map()
     m.read_file(input_file)
-    route, cost = m.New_Algo()
-    output_file = 'update'
+    route, cost = m.Astar(0)
+    output_file = 'astar'
     m.write_file(output_file, route, cost)
     m.visualize_maze(route, output_file)
 
