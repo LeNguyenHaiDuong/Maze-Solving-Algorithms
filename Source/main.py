@@ -379,6 +379,15 @@ def main():
                     m.visualize_maze(route, output_file)  # output/level_1/input1/bfs/bfs.jpg
                     m.reset_map()
 
+    # """FOR FAST TESTING:"""
+    # input_file = 'input/level_1/input5.txt'
+    # m = Map()
+    # m.read_file(input_file)
+    # route, cost = m.DFS()
+    # output_file = 'advance2'
+    # m.write_file(output_file, route, cost)
+    # m.visualize_maze(route, output_file)
+
 
 if __name__ == "__main__":
     main()
