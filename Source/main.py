@@ -210,8 +210,7 @@ class Map():
             return
 
     def UCS(self):
-        explore = []
-        explore.append(self.start_node)
+        explore = [self.start_node]
         self.UCS_Util(self.end_node, explore, [])
         route = [self.end_node.self_node]
         cost = self.back_tracking_route(
@@ -346,47 +345,77 @@ class Map():
                 j.pre_node = []
                 j.total_cost = 1000000
 
+    def New_Algo_Util(self, explore, close):
+        self.UCS_Util(self.end_node, explore, close)
+        route = self.back_tracking_route2(self.end_node)
+        route = self.back_tracking_route2(self.end_node)
+        for node in route:
+            for nei in node.neighbor_node:
+                if nei.self_node not in route and nei.self_cost < -1 and nei not in close:
+                    self.end_node.total_cost += nei.self_cost + 1
+                    node.pre_node.append(nei.self_node)
+                    nei.pre_node.append(node.self_node)
+                    close.append(nei)
+
+    def back_tracking_route2(self, node):
+        route = []
+        while node.pre_node:
+            pre = node.pre_node[-1]
+            route.append(pre)
+            node = pre
+        return route
+
+    def New_Algo(self):
+        explore = [self.start_node]
+        self.New_Algo_Util(explore, [])
+        route = [self.end_node.self_node]
+        cost = self.back_tracking_route(route, self.end_node, self.end_node.total_cost)
+        return route, cost
+
 
 def main():
-    create_output_folder()
-    input_folder = ['input/level_1', 'input/level_2', 'input/advance']
-    for path in input_folder:
-        for filename in os.listdir(path):
-            input_file = os.path.join(path, filename)  # input/level_1/input1.txt
-            m = Map()
-            m.read_file(input_file)
-            output_folder = path.replace('in', 'out')  # output/level_1
-            output_folder = os.path.join(output_folder, filename[:-4])  # output/level_1/input1
-            os.mkdir(output_folder)
+    """HÀM MAIN GỐC"""
+    # create_output_folder()
+    # input_folder = ['input/level_1', 'input/level_2', 'input/advance']
+    # for path in input_folder:
+    #     for filename in os.listdir(path):
+    #         input_file = os.path.join(path, filename)  # input/level_1/input1.txt
+    #         m = Map()
+    #         m.read_file(input_file)
+    #         output_folder = path.replace('in', 'out')  # output/level_1
+    #         output_folder = os.path.join(output_folder, filename[:-4])  # output/level_1/input1
+    #         os.mkdir(output_folder)
 
-            list_algo = [m.DFS, m.BFS, m.UCS, m.GBFS, m.Astar]
-            list_name = ['dfs', 'bfs', 'ucs', 'gbfs', 'astar']
-            for i in range(5):
-                output_sub = os.path.join(output_folder, list_name[i])  # output/level_1/input1/bfs
-                os.mkdir(output_sub)
-                output_file = os.path.join(output_sub, list_name[i])
-                if i > 2:  # gbfs, astar
-                    for j in range(2):
-                        route, cost = list_algo[i](j)
-                        name = output_file + '_heuristic_' + str(j+1)
-                        m.write_file(name, route, cost)  # astar_heuristic_1.txt
-                        m.visualize_maze(route, name)  # astar_heuristic_1.jpg
-                        m.reset_map()
-                else:
-                    route, cost = list_algo[i]()
-                    output_file = os.path.join(output_sub, list_name[i])
-                    m.write_file(output_file, route, cost)  # output/level_1/input1/bfs/bfs.txt
-                    m.visualize_maze(route, output_file)  # output/level_1/input1/bfs/bfs.jpg
-                    m.reset_map()
+    #         list_algo = [m.DFS, m.BFS, m.UCS, m.GBFS, m.Astar]
+    #         list_name = ['dfs', 'bfs', 'ucs', 'gbfs', 'astar']
+    #         for i in range(5):
+    #             output_sub = os.path.join(output_folder, list_name[i])  # output/level_1/input1/bfs
+    #             os.mkdir(output_sub)
+    #             output_file = os.path.join(output_sub, list_name[i])
+    #             if i > 2:  # gbfs, astar
+    #                 for j in range(2):
+    #                     route, cost = list_algo[i](j)
+    #                     name = output_file + '_heuristic_' + str(j+1)
+    #                     m.write_file(name, route, cost)  # astar_heuristic_1.txt
+    #                     m.visualize_maze(route, name)  # astar_heuristic_1.jpg
+    #                     m.reset_map()
+    #             else:
+    #                 route, cost = list_algo[i]()
+    #                 output_file = os.path.join(output_sub, list_name[i])
+    #                 m.write_file(output_file, route, cost)  # output/level_1/input1/bfs/bfs.txt
+    #                 m.visualize_maze(route, output_file)  # output/level_1/input1/bfs/bfs.jpg
+    #                 m.reset_map()
 
-    # """FOR FAST TESTING:"""
-    # input_file = 'input/level_1/input5.txt'
-    # m = Map()
-    # m.read_file(input_file)
-    # route, cost = m.DFS()
-    # output_file = 'advance2'
-    # m.write_file(output_file, route, cost)
-    # m.visualize_maze(route, output_file)
+    """FOR FAST TESTING:"""
+    # TEST NEW ALGO CỦA DƯƠNG:
+
+    input_file = 'input/level_2/input3.txt'
+    m = Map()
+    m.read_file(input_file)
+    route, cost = m.New_Algo()
+    output_file = 'update'
+    m.write_file(output_file, route, cost)
+    m.visualize_maze(route, output_file)
 
 
 if __name__ == "__main__":
