@@ -1,10 +1,7 @@
-"""TEST TELEPORTATION"""
 """References:
 https://colab.research.google.com/drive/1ejLc4LkrmjpbcRYC3W2xjfA0C0o1PWTp?usp=sharing#scrollTo=u5ZHJ1oq8Ucm
 https://favtutor.com/blogs/breadth-first-search-python
 """
-
-
 
 
 from helper import *
@@ -12,6 +9,8 @@ import matplotlib.pyplot as plt
 import os
 import numpy as np
 import matplotlib.cm as cm
+
+
 class Node():
     def __init__(self, ele, pos):
         self.pre_node = []  # node trước nó
@@ -76,21 +75,15 @@ class Map():
 
         # tele node: hoán đổi vị trí cửa đi tới
         for key in self.tele_node:
-            # Cách 1: từ cái mới hôm qua cải tiến lại nhưng có thể bị lỗi
-#             for i in self.tele_node[key][0].neighbor_node:
-#                 if self.tele_node[key][0] in i.neighbor_node:
-#                     i.neighbor_node.remove(self.tele_node[key][0])
-#                     i.neighbor_node.append(self.tele_node[key][1])
-#             for i in self.tele_node[key][1].neighbor_node:
-#                 if self.tele_node[key][1] in i.neighbor_node:
-#                     i.neighbor_node.remove(self.tele_node[key][1])
-#                     i.neighbor_node.append(self.tele_node[key][0])
-           
-            # Cách 2: swap cả danh sách kề và cả self_node, cách này chắc ăn hơn
+            # swap danh sách kề của 2 cửa:
+            # để khi đến cửa này thì có thể dịch chuyển tức thời sang cửa kia
             temp = self.tele_node[key][0].neighbor_node
             self.tele_node[key][0].neighbor_node = self.tele_node[key][1].neighbor_node
             self.tele_node[key][1].neighbor_node = temp
-            
+
+            # swap self.node của 2 cửa:
+            # để khi đến node kề của một cửa thì sẽ đo được heuristic của cánh cửa kia và di chuyển đến!
+            # thay vì đo heuristic của cửa này
             temp = self.tele_node[key][0].self_node
             self.tele_node[key][0].self_node = self.tele_node[key][1].self_node
             self.tele_node[key][1].self_node = temp
@@ -120,7 +113,7 @@ class Map():
         except:
             pass
 
-        # APPEND node which pos is tele_pos TO self.tele_node:
+        # APPEND tele_node:
         for key in tele_pos:
             posA = tele_pos[key][0]
             posB = tele_pos[key][1]
@@ -225,7 +218,7 @@ class Map():
             route, self.end_node, self.end_node.total_cost)
         return route, cost
 
-    def GBFS(self):
+    def GBFS(self, h_type):
         open = [(self.start_node, 0)]
         close = []
 
@@ -239,7 +232,7 @@ class Map():
 
                 for node in cur_node.neighbor_node:
                     if node not in close:
-                        cost = heuristic_1(self.end_node, node)
+                        cost = heuristic(self.end_node, node, h_type)
                         open.append((node, cost))
                         node.pre_node.append(cur_node)
             else:
@@ -249,12 +242,12 @@ class Map():
         cost = self.back_tracking_route(route, self.end_node)
         return route, cost
 
-    def Astar_Util(self, goal, explore, close):
+    def Astar_Util(self, goal, explore, close, h_type):
         if not explore:
             return
         mini = explore[0]
         for i in explore:
-            if i.total_cost + heuristic_1(goal, i) < mini.total_cost + heuristic_1(goal, mini):
+            if i.total_cost + heuristic(goal, i, h_type) < mini.total_cost + heuristic(goal, mini, h_type):
                 mini = i
         for i in mini.neighbor_node:
             if i not in close and mini.total_cost + i.self_cost < i.total_cost:
@@ -265,14 +258,14 @@ class Map():
         if mini != goal:
             close.append(mini)
             explore.remove(mini)
-            self.Astar_Util(goal, explore, close)
+            self.Astar_Util(goal, explore, close, h_type)
         else:
             return
 
-    def Astar(self):
+    def Astar(self, h_type):
         explore = []
         explore.append(self.start_node)
-        self.Astar_Util(self.end_node, explore, [])
+        self.Astar_Util(self.end_node, explore, [], h_type)
         route = [self.end_node.self_node]
         cost = self.back_tracking_route(
             route, self.end_node, self.end_node.total_cost)
@@ -354,39 +347,37 @@ class Map():
                 j.total_cost = 1000000
 
 
-def main(): """XEM LẠI KỊCH BẢN HÀM MAIN !!! (bản đồ bonus, advance?)"""
-# create_output_folder()
-# input_folder = ['input/level_1', 'input/level_2', 'input/advance']
-# for path in input_folder:
-#     for filename in os.listdir(path):
-#         input_file = os.path.join(path, filename)
-#         m = Map()
-#         m.read_file(input_file)
-#         output_folder = input_file.replace("in", "out")
-#         output_folder = output_folder[:-4]  # delete extension
-#         try:
-#             os.mkdir(output_folder)
-#         except:
-#             pass
+def main():
+    create_output_folder()
+    input_folder = ['input/level_1', 'input/level_2', 'input/advance']
+    for path in input_folder:
+        for filename in os.listdir(path):
+            input_file = os.path.join(path, filename)  # input/level_1/input1.txt
+            m = Map()
+            m.read_file(input_file)
+            output_folder = path.replace('in', 'out')  # output/level_1
+            output_folder = os.path.join(output_folder, filename[:-4])  # output/level_1/input1
+            os.mkdir(output_folder)
 
-#         list_algo = [m.DFS, m.BFS, m.UCS, m.GBFS, m.Astar]
-#         list_name = ['DFS', 'BFS', 'UCS', 'GBFS', 'Astar']
-#         for i in range(5):
-#             route, cost = list_algo[i]()
-#             output_file = os.path.join(output_folder, list_name[i])
-#             m.write_file(output_file, route, cost)
-#             m.visualize_maze(route, output_file)
-#             m.reset_map()
-
-
-# test tele node:
-input_file = 'input/advance/input1.txt'
-m = Map()
-m.read_file(input_file)
-route, cost = m.Astar()
-output_file = 'advance1'
-m.write_file(output_file, route, cost)
-m.visualize_maze(route, output_file)
+            list_algo = [m.DFS, m.BFS, m.UCS, m.GBFS, m.Astar]
+            list_name = ['dfs', 'bfs', 'ucs', 'gbfs', 'astar']
+            for i in range(5):
+                output_sub = os.path.join(output_folder, list_name[i])  # output/level_1/input1/bfs
+                os.mkdir(output_sub)
+                output_file = os.path.join(output_sub, list_name[i])
+                if i > 2:  # gbfs, astar
+                    for j in range(2):
+                        route, cost = list_algo[i](j)
+                        name = output_file + '_heuristic_' + str(j+1)
+                        m.write_file(name, route, cost)  # astar_heuristic_1.txt
+                        m.visualize_maze(route, name)  # astar_heuristic_1.jpg
+                        m.reset_map()
+                else:
+                    route, cost = list_algo[i]()
+                    output_file = os.path.join(output_sub, list_name[i])
+                    m.write_file(output_file, route, cost)  # output/level_1/input1/bfs/bfs.txt
+                    m.visualize_maze(route, output_file)  # output/level_1/input1/bfs/bfs.jpg
+                    m.reset_map()
 
 
 if __name__ == "__main__":
