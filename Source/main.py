@@ -460,7 +460,7 @@ def main():
 
             list_algo = [m.DFS, m.BFS, m.UCS, m.GBFS, m.Astar]
             list_name = ['dfs', 'bfs', 'ucs', 'gbfs', 'astar']
-            if path[-1] == '2':  # 'input/level_2'
+            if path[-1] == '2' or path[-1] == 'e':  # 'input/level_2', 'input/advance'
                 list_algo.append(m.New_Algo)
                 list_name.append('new_algo')
 
