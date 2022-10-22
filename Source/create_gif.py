@@ -16,6 +16,11 @@ class Video:
     CLOSE_IMG = pygame.image.load("imgs/close.png")
     STAR_IMG = pygame.image.load("imgs/star.png")
     EXIT_IMG = pygame.image.load("imgs/exit.png")
+    TELE0_IMG = pygame.image.load("imgs/teleport0.png")
+    TELE1_IMG = pygame.image.load("imgs/teleport1.png")
+    TELE2_IMG = pygame.image.load("imgs/teleport2.png")
+    TELE3_IMG = pygame.image.load("imgs/teleport3.png")
+    TELE4_IMG = pygame.image.load("imgs/teleport4.png")
 
     frames = []
     map_2d = []
@@ -34,17 +39,17 @@ class Video:
     def draw(cls, open, close):
         cls.window.fill(tuple(cls.BACKGROUND_COLOR))
 
-        import random
-        i = random.choice([0, 1, 2])
+        # import random
+        # i = random.choice([0, 1, 2])
 
-        cls.BACKGROUND_COLOR[i] += 20 * a[i]
+        # cls.BACKGROUND_COLOR[i] += 20 * a[i]
 
-        if cls.BACKGROUND_COLOR[i] > 255:
-            cls.BACKGROUND_COLOR[i] = 255
-            a[i] *= -1
-        elif cls.BACKGROUND_COLOR[i] < 150:
-            cls.BACKGROUND_COLOR[i] = 150
-            a[i] *= -1
+        # if cls.BACKGROUND_COLOR[i] > 255:
+        #     cls.BACKGROUND_COLOR[i] = 255
+        #     a[i] *= -1
+        # elif cls.BACKGROUND_COLOR[i] < 150:
+        #     cls.BACKGROUND_COLOR[i] = 150
+        #     a[i] *= -1
 
 
         map_2d = []
@@ -75,6 +80,16 @@ class Video:
                     cls.window.blit(Video.STAR_IMG, (x * Video.BLOCK_SIZE, y * Video.BLOCK_SIZE))
                 elif col == 'E':
                     cls.window.blit(Video.EXIT_IMG, (x * Video.BLOCK_SIZE, y * Video.BLOCK_SIZE))
+                elif col == '0':
+                    cls.window.blit(Video.TELE0_IMG, (x * Video.BLOCK_SIZE, y * Video.BLOCK_SIZE))
+                elif col == '1':
+                    cls.window.blit(Video.TELE1_IMG, (x * Video.BLOCK_SIZE, y * Video.BLOCK_SIZE))
+                elif col == '2':
+                    cls.window.blit(Video.TELE2_IMG, (x * Video.BLOCK_SIZE, y * Video.BLOCK_SIZE))
+                elif col == '3':
+                    cls.window.blit(Video.TELE3_IMG, (x * Video.BLOCK_SIZE, y * Video.BLOCK_SIZE))
+                elif col == '4':
+                    cls.window.blit(Video.TELE4_IMG, (x * Video.BLOCK_SIZE, y * Video.BLOCK_SIZE))
 
 
         pygame.display.update()

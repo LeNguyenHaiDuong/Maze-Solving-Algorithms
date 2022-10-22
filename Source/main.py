@@ -41,6 +41,7 @@ class Map():
         self.bonus_node = []  # điểm cộng
         # dịch chuyển tức thời (key: int, value: [nodeA, nodeB])
         self.tele_node = dict()
+        self.num_tele = 0 # so luong teleport
 
     def set_map(self):
         counter = 0
@@ -91,6 +92,8 @@ class Map():
             temp = self.tele_node[key][0].self_node
             self.tele_node[key][0].self_node = self.tele_node[key][1].self_node
             self.tele_node[key][1].self_node = temp
+
+        self.num_tele = len(self.tele_node)
 
     def read_file(self, file_path):
         f = open(file_path, 'r')
@@ -182,7 +185,6 @@ class Map():
         Video.create_gif('dfs_video.gif')
         return route, cost
 
-
     def BFS(self):
         open_pos = []
         close = []
@@ -210,7 +212,6 @@ class Map():
                         queue.append(n)
                         open_pos.append(n.self_node)
                         n.pre_node.append(node)
-        # return route, cost
 
     def UCS_Util(self, goal, explore, close, open_pos, close_pos):
         if not explore:
@@ -481,21 +482,21 @@ def main():
 
 
     # TEST GBFS TAO VIDEO OKE
-    # input_file = 'Duong_input.txt'
-    # m.read_file(input_file)
-    # route, cost = m.GBFS(0)
-    # output_file = 'gbfs'
-    # m.write_file(output_file, route, cost)
-    # m.visualize_maze(route, output_file)
+    input_file = 'input/advance/input2.txt'
+    m.read_file(input_file)
+    route, cost = m.GBFS(0)
+    output_file = 'gbfs'
+    m.write_file(output_file, route, cost)
+    m.visualize_maze(route, output_file)
 
 
     # TEST UCS TAO VIDEO OKE
-    input_file = 'source/Duong_input.txt'
-    m.read_file(input_file)
-    route, cost = m.UCS()
-    output_file = 'ucs'
-    m.write_file(output_file, route, cost)
-    m.visualize_maze(route, output_file)
+    # input_file = 'source/Duong_input.txt'
+    # m.read_file(input_file)
+    # route, cost = m.UCS()
+    # output_file = 'ucs'
+    # m.write_file(output_file, route, cost)
+    # m.visualize_maze(route, output_file)
 
 
     # TEST A* TAO VIDEO OKE
