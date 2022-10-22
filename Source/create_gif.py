@@ -1,11 +1,12 @@
 from hashlib import new
 from lib2to3.pgen2.token import STAR
 import os
-import threading #------------------- xoa file
+import threading  # ------------------- xoa file
 
 import pygame
-from PIL import Image #--------------------tao gif
+from PIL import Image  # --------------------tao gif
 a = [-1, -1, -1]
+
 
 class Video:
     BLOCK_SIZE = 21
@@ -51,7 +52,6 @@ class Video:
         #     cls.BACKGROUND_COLOR[i] = 150
         #     a[i] *= -1
 
-
         map_2d = []
         for i in range(len(cls.map_2d)):
             row = []
@@ -91,7 +91,6 @@ class Video:
                 elif col == '4':
                     cls.window.blit(Video.TELE4_IMG, (x * Video.BLOCK_SIZE, y * Video.BLOCK_SIZE))
 
-
         pygame.display.update()
         img_name = f"frame-{len(cls.frames)}.jpg"
         pygame.image.save(cls.window, img_name)
@@ -100,12 +99,14 @@ class Video:
     @classmethod
     def create_gif(cls, filename="video.gif"):
         pygame.quit()
+        try:
+            images = []
+            for frame in cls.frames:
+                img = Image.open(frame).convert("P")  # ------------------------TK
+                images.append(img)
+            images[0].save(filename, save_all=True, append_images=images[1:], duration=100, loop=0, optimize=True)
 
-        images = []
-        for frame in cls.frames:
-            img = Image.open(frame).convert("P") #------------------------TK
-            images.append(img)
-        images[0].save(filename, save_all=True, append_images=images[1:], duration=100, loop=0, optimize = True)
-
-        for frame in cls.frames:
-            threading.Thread(target=os.remove, args=(frame,)).start()
+            for frame in cls.frames:
+                threading.Thread(target=os.remove, args=(frame,)).start()
+        except:
+            print('ERROR CREATING GIF !!!')

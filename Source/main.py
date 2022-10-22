@@ -214,6 +214,8 @@ class Map():
                         open_pos.append(n.self_node)
                         n.pre_node.append(node)
 
+        return [], 1000000  # nếu ko có đường đi
+
     def UCS_Util(self, goal, explore, close, open_pos, close_pos):
         if not explore:
             return
@@ -341,7 +343,7 @@ class Map():
         walls = [(i, j) for i in range(len(self.matrix))
                  for j in range(len(self.matrix[0])) if self.matrix[i][j].element == 'x']
 
-        if len(route) > 1:
+        if len(route) > 0:
             direction = []
             for i in range(1, len(route)):
                 if route[i][0]-route[i-1][0] > 0:
@@ -391,7 +393,7 @@ class Map():
     def write_file(self, file_path, route, cost):
         file_path += '.txt'
         with open(file_path, 'w') as f:
-            f.write(str(cost)) if len(route) > 1 else f.write('NO')
+            f.write(str(cost)) if len(route) > 0 else f.write('NO')
 
     def reset_map(self):
         for row in self.matrix:
@@ -401,8 +403,8 @@ class Map():
                 j.pre_node = []
                 j.total_cost = 1000000
 
-    def New_Algo_Util(self, explore, close):
-        self.UCS_Util(self.end_node, [self.start_node], [])
+    def New_Algo_Util(self, explore, close, open_pos, close_pos):
+        self.UCS_Util(self.end_node, [self.start_node], [], open_pos, close_pos)
         route = self.back_tracking_route2(self.end_node)
         close.extend(route)
 
@@ -411,6 +413,7 @@ class Map():
             # duyệt các node j kề với node i:
             for j in i.neighbor_node:
                 explore.append(j)
+                open_pos.append(j.self_node)
                 if j.self_cost < -1 and j not in close:  # nếu j là node thưởng và chưa có trong tập đóng
                     self.end_node.total_cost += j.self_cost + 1  # cập nhật tổng chi phí
 
@@ -418,9 +421,10 @@ class Map():
                     i.pre_node.append(j)
                     j.pre_node.append(i)
                     close.append(j)
+                    close_pos.append(j.self_node)
                     explore.remove(j)
 
-    def back_tracking_route2(self, node):  # return node
+    def back_tracking_route2(self, node):  # return node, do not pop !!
         route = []
         while node.pre_node:
             pre = node.pre_node[-1]
@@ -428,11 +432,17 @@ class Map():
             node = pre
         return route
 
-    def New_Algo(self):
+    def New_Algo(self, output_file):
+        open_pos = []
+        close_pos = []
+        Video.start(self.raw_matrix)
         explore = [self.start_node]
-        self.New_Algo_Util(explore, [])
+        open_pos.append(self.start_node.self_node)
+        self.New_Algo_Util(explore, [], open_pos, close_pos)
         route = [self.end_node.self_node]
         cost = self.back_tracking_route(route, self.end_node, self.end_node.total_cost)
+        output_file += '.gif'
+        Video.create_gif(output_file)
         return route, cost
 
 
@@ -458,7 +468,7 @@ def main():
                 output_sub = os.path.join(output_folder, list_name[i])  # output/level_1/input1/bfs
                 os.mkdir(output_sub)
                 output_file = os.path.join(output_sub, list_name[i])  # output/level_1/input1/bfs/bfs
-                if i > 2:  # gbfs, astar
+                if i > 2 and i < 5:  # gbfs, astar
                     for j in range(2):
                         new_output_file = output_file + '_heuristic_' + str(j+1)
                         route, cost = list_algo[i](j, new_output_file)
