@@ -198,6 +198,7 @@ class Map():
             close.append(node)
             close_pos.append(node.self_node)
             
+            close.append(node)
             if node == self.end_node:
                 cost = self.back_tracking_route(route, node)
                 Video.draw(open_pos, close_pos)
