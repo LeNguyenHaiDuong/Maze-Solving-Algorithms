@@ -458,11 +458,8 @@ def main():
             output_folder = os.path.join(output_folder, filename[:-4])  # output/level_1/input1
             os.mkdir(output_folder)
 
-            list_algo = [m.DFS, m.BFS, m.UCS, m.GBFS, m.Astar]
-            list_name = ['dfs', 'bfs', 'ucs', 'gbfs', 'astar']
-            if path[-1] == '2' or path[-1] == 'e':  # 'input/level_2', 'input/advance'
-                list_algo.append(m.New_Algo)
-                list_name.append('new_algo')
+            list_algo = [m.DFS, m.BFS, m.UCS, m.GBFS, m.Astar, m.New_Algo]
+            list_name = ['dfs', 'bfs', 'ucs', 'gbfs', 'astar', 'new_algo']
 
             for i in range(len(list_algo)):
                 output_sub = os.path.join(output_folder, list_name[i])  # output/level_1/input1/bfs
