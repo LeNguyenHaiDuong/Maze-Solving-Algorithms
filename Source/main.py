@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 import os
 import numpy as np
 import matplotlib.cm as cm
+from create_gif import Video
 
 
 class Node():
@@ -19,6 +20,8 @@ class Node():
         self.total_cost = 1000000  # tổng chi phí từ start node
         self.self_cost = 1  # chi phí khi di chuyển đến node này
         self.neighbor_node = []  # node lân cận có thể di chuyển
+        self.raw_matrix = [] # ma tran chua cac ki tu
+
 
     def is_path(self):
         if self.element == 'x':
@@ -46,6 +49,7 @@ class Map():
                 # end node:
                 if self.matrix[i][j].element == ' ':
                     if i == 0 or j == 0 or i == len(self.matrix)-1 or j == len(self.matrix[0])-1:
+                        self.raw_matrix[i][j] = 'E'
                         self.end_node = self.matrix[i][j]
                 # start node:
                 elif self.matrix[i][j].element == 'S':
@@ -104,6 +108,7 @@ class Map():
 
         text = f.read()
         matrix = [list(i) for i in text.splitlines()]
+        self.raw_matrix = matrix
         try:
             for i in range(len(matrix)):
                 row = []
@@ -144,10 +149,14 @@ class Map():
             node = pre
         return cost
 
-    def DFS_Util(self, stack, goal, close):
+    def DFS_Util(self, stack, goal, close, open_pos, close_pos):
+        if goal in close:
+            return
         if len(stack) != 0:
+            Video.draw(open_pos, close_pos)
             cur_node = stack.pop()
             close.append(cur_node)
+            close_pos.append(cur_node.self_node)
 
             if cur_node is goal:
                 return
@@ -156,42 +165,56 @@ class Map():
                 if node not in close:
                     node.pre_node.append(cur_node)
                     stack.append(node)
-                    self.DFS_Util(stack, goal, close)
+                    open_pos.append(node.self_node)
+                    self.DFS_Util(stack, goal, close, open_pos, close_pos)
 
     def DFS(self):
         stack = []
         close = []
+        open_pos = []
+        close_pos = []
         stack.append(self.start_node)
         close.append(self.start_node)
-        self.DFS_Util(stack, self.end_node, close)
+        Video.start(m.raw_matrix)
+        self.DFS_Util(stack, self.end_node, close, open_pos, close_pos)
         route = [self.end_node.self_node]
         cost = self.back_tracking_route(route, self.end_node)
+        Video.create_gif('dfs_video.gif')
         return route, cost
 
+
     def BFS(self):
-        queue = []
-        route = []
-        visited = []
-        visited.append(self.start_node)
-        queue.append(self.start_node)
+        open_pos = []
+        close = []
+        close_pos = []
+        queue = [self.start_node]
+        route = [self.end_node.self_node]
         cost = 0
+        Video.start(m.raw_matrix)
 
         while queue:
             node = queue.pop(0)
+            Video.draw(open_pos, close_pos)
+            close.append(node)
+            close_pos.append(node.self_node)
+            
             if node == self.end_node:
-                route.append(node.self_node)
                 cost = self.back_tracking_route(route, node)
+                Video.draw(open_pos, close_pos)
+                Video.create_gif('bfs_video.gif')
+                return route, cost
             else:
                 for n in node.neighbor_node:
-                    if n not in visited:
-                        visited.append(n)
+                    if n not in queue and n not in close:
                         queue.append(n)
+                        open_pos.append(n.self_node)
                         n.pre_node.append(node)
-        return route, cost
+        # return route, cost
 
-    def UCS_Util(self, goal, explore, close):
+    def UCS_Util(self, goal, explore, close, open_pos, close_pos):
         if not explore:
             return
+        Video.draw(open_pos, close_pos)
         mini = explore[0]
         for i in explore:
             if i.total_cost < mini.total_cost:
@@ -202,48 +225,65 @@ class Map():
                 i.pre_node.append(mini)
                 if i not in explore:
                     explore.append(i)
+                    open_pos.append(i.self_node)
+        
         if mini != goal:
             close.append(mini)
             explore.remove(mini)
-            self.UCS_Util(goal, explore, close)
+            close_pos.append(i.self_node)
+            self.UCS_Util(goal, explore, close, open_pos, close_pos)
         else:
             return
 
     def UCS(self):
+        open_pos = []
+        close_pos = []
         explore = [self.start_node]
-        self.UCS_Util(self.end_node, explore, [])
+        Video.start(m.raw_matrix)
+        self.UCS_Util(self.end_node, explore, [], open_pos, close_pos)
         route = [self.end_node.self_node]
         cost = self.back_tracking_route(
             route, self.end_node, self.end_node.total_cost)
+        Video.create_gif('ucs_video.gif')
         return route, cost
 
     def GBFS(self, h_type):
         open = [(self.start_node, 0)]
         close = []
+        open_pos = []
+        close_pos = []
+        Video.start(m.raw_matrix)
 
         while self.end_node not in close:
             if open:
                 # get the mini node which having min cost
                 mini = min(open, key=lambda node: node[1])
                 open.remove(mini)
-                cur_node = mini[0]
+                if mini[0] in close: 
+                    continue
                 close.append(mini[0])
+                close_pos.append(mini[0].self_node)
 
-                for node in cur_node.neighbor_node:
+                for node in mini[0].neighbor_node:
                     if node not in close:
                         cost = heuristic(self.end_node, node, h_type)
                         open.append((node, cost))
-                        node.pre_node.append(cur_node)
+                        node.pre_node.append(mini[0])
+                        open_pos.append(node.self_node)
+                Video.draw(open_pos, close_pos)
             else:
                 break
 
         route = [self.end_node.self_node]
         cost = self.back_tracking_route(route, self.end_node)
+        Video.create_gif('gbfs_video.gif')
         return route, cost
 
-    def Astar_Util(self, goal, explore, close, h_type):
+    def Astar_Util(self, goal, explore, close, h_type, open_pos, close_pos):
         if not explore:
             return
+        Video.draw(open_pos, close_pos)
+
         mini = explore[0]
         for i in explore:
             if i.total_cost + heuristic(goal, i, h_type) < mini.total_cost + heuristic(goal, mini, h_type):
@@ -254,20 +294,27 @@ class Map():
                 i.pre_node.append(mini)
                 if i not in explore:
                     explore.append(i)
+                    open_pos.append(i.self_node)
+                    
         if mini != goal:
             close.append(mini)
             explore.remove(mini)
-            self.Astar_Util(goal, explore, close, h_type)
+            close_pos.append(i.self_node)
+            self.Astar_Util(goal, explore, close, h_type, open_pos, close_pos)
         else:
             return
 
     def Astar(self, h_type):
         explore = []
+        open_pos = []
+        close_pos = []
+        Video.start(m.raw_matrix)
         explore.append(self.start_node)
-        self.Astar_Util(self.end_node, explore, [], h_type)
+        self.Astar_Util(self.end_node, explore, [], h_type, open_pos, close_pos)
         route = [self.end_node.self_node]
         cost = self.back_tracking_route(
             route, self.end_node, self.end_node.total_cost)
+        Video.create_gif('astar_video.gif')
         return route, cost
 
     def visualize_maze(self, route, file_path):
@@ -373,6 +420,8 @@ class Map():
         return route, cost
 
 
+m = Map()
+
 def main():
     """HÀM MAIN GỐC"""
     # create_output_folder()
@@ -409,13 +458,59 @@ def main():
     """FOR FAST TESTING:"""
     # TEST NEW ALGO CỦA DƯƠNG:
 
+    # input_file = 'Duong_input.txt'
+    # m = Map()
+    # m.read_file(input_file)
+    # route, cost = m.Astar(0)
+    # output_file = 'astar'
+    # m.write_file(output_file, route, cost)
+    # m.visualize_maze(route, output_file)
+
+
+    # TEST DFS TAO VIDEO OKE
+    # input_file = 'Duong_input.txt'
+    # m.read_file(input_file)
+    # route, cost = m.DFS()
+    # output_file = 'dfs'
+    # m.write_file(output_file, route, cost)
+    # m.visualize_maze(route, output_file)
+
+
+    # TEST GBFS TAO VIDEO OKE
+    # input_file = 'Duong_input.txt'
+    # m.read_file(input_file)
+    # route, cost = m.GBFS(0)
+    # output_file = 'gbfs'
+    # m.write_file(output_file, route, cost)
+    # m.visualize_maze(route, output_file)
+
+
+    # TEST UCS TAO VIDEO OKE
+    # input_file = 'Duong_input.txt'
+    # m.read_file(input_file)
+    # route, cost = m.UCS()
+    # output_file = 'ucs'
+    # m.write_file(output_file, route, cost)
+    # m.visualize_maze(route, output_file)
+
+
+    # TEST A* TAO VIDEO OKE
+    # input_file = 'Duong_input.txt'
+    # m.read_file(input_file)
+    # route, cost = m.Astar(0)
+    # output_file = 'Astar'
+    # m.write_file(output_file, route, cost)
+    # m.visualize_maze(route, output_file)
+
+
+    # TEST BFS TAO VIDEO OKE
     input_file = 'Duong_input.txt'
-    m = Map()
     m.read_file(input_file)
-    route, cost = m.Astar(0)
-    output_file = 'astar'
+    route, cost = m.BFS()
+    output_file = 'BFS'
     m.write_file(output_file, route, cost)
     m.visualize_maze(route, output_file)
+
 
 
 if __name__ == "__main__":
