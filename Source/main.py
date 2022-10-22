@@ -459,7 +459,7 @@ def main():
             os.mkdir(output_folder)
 
             list_algo = [m.DFS, m.BFS, m.UCS, m.GBFS, m.Astar, m.New_Algo]
-            list_name = ['dfs', 'bfs', 'ucs', 'gbfs', 'astar', 'new_algo']
+            list_name = ['dfs', 'bfs', 'ucs', 'gbfs', 'astar', 'algo_1']
 
             for i in range(len(list_algo)):
                 output_sub = os.path.join(output_folder, list_name[i])  # output/level_1/input1/bfs
