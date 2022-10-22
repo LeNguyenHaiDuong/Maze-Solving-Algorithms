@@ -214,7 +214,6 @@ class Map():
     def UCS_Util(self, goal, explore, close, open_pos, close_pos):
         if not explore:
             return
-        Video.draw(open_pos, close_pos)
         mini = explore[0]
         for i in explore:
             if i.total_cost < mini.total_cost:
@@ -227,10 +226,12 @@ class Map():
                     explore.append(i)
                     open_pos.append(i.self_node)
         
+        close.append(mini)
+        explore.remove(mini)
+        close_pos.append(mini.self_node)
+        Video.draw(open_pos, close_pos)
+        
         if mini != goal:
-            close.append(mini)
-            explore.remove(mini)
-            close_pos.append(i.self_node)
             self.UCS_Util(goal, explore, close, open_pos, close_pos)
         else:
             return
@@ -282,12 +283,12 @@ class Map():
     def Astar_Util(self, goal, explore, close, h_type, open_pos, close_pos):
         if not explore:
             return
-        Video.draw(open_pos, close_pos)
 
         mini = explore[0]
         for i in explore:
             if i.total_cost + heuristic(goal, i, h_type) < mini.total_cost + heuristic(goal, mini, h_type):
                 mini = i
+       
         for i in mini.neighbor_node:
             if i not in close and mini.total_cost + i.self_cost < i.total_cost:
                 i.total_cost = mini.total_cost + i.self_cost
@@ -295,11 +296,13 @@ class Map():
                 if i not in explore:
                     explore.append(i)
                     open_pos.append(i.self_node)
-                    
+
+        close.append(mini)
+        explore.remove(mini)            
+        close_pos.append(mini.self_node)
+        Video.draw(open_pos, close_pos)
+
         if mini != goal:
-            close.append(mini)
-            explore.remove(mini)
-            close_pos.append(i.self_node)
             self.Astar_Util(goal, explore, close, h_type, open_pos, close_pos)
         else:
             return
@@ -486,16 +489,16 @@ def main():
 
 
     # TEST UCS TAO VIDEO OKE
-    # input_file = 'Duong_input.txt'
-    # m.read_file(input_file)
-    # route, cost = m.UCS()
-    # output_file = 'ucs'
-    # m.write_file(output_file, route, cost)
-    # m.visualize_maze(route, output_file)
+    input_file = 'source/Duong_input.txt'
+    m.read_file(input_file)
+    route, cost = m.UCS()
+    output_file = 'ucs'
+    m.write_file(output_file, route, cost)
+    m.visualize_maze(route, output_file)
 
 
     # TEST A* TAO VIDEO OKE
-    # input_file = 'Duong_input.txt'
+    # input_file = 'source/Duong_input.txt'
     # m.read_file(input_file)
     # route, cost = m.Astar(0)
     # output_file = 'Astar'
@@ -504,12 +507,12 @@ def main():
 
 
     # TEST BFS TAO VIDEO OKE
-    input_file = 'Duong_input.txt'
-    m.read_file(input_file)
-    route, cost = m.BFS()
-    output_file = 'BFS'
-    m.write_file(output_file, route, cost)
-    m.visualize_maze(route, output_file)
+    # input_file = 'Duong_input.txt'
+    # m.read_file(input_file)
+    # route, cost = m.BFS()
+    # output_file = 'BFS'
+    # m.write_file(output_file, route, cost)
+    # m.visualize_maze(route, output_file)
 
 
 

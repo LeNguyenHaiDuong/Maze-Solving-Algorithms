@@ -1,4 +1,5 @@
 import math
+from Source.create_gif import Video
 
 
 class Node():
@@ -23,12 +24,14 @@ class Map():
         self.start_node = None  # node bat dau 'S'
         self.end_node = None  # node ket thuc 'E'
         self.bonus_node = []  # node co diem thuong '+'
+        self.raw_matrix = [] # ma tran chua cac ki tu
 
     def set_map(self):
         for i in range(0, len(self.matrix)):
             for j in range(0, len(self.matrix[i])):
                 if self.matrix[i][j].element == ' ' and (i % (len(self.matrix)-1) == 0 or j % (len(self.matrix[0])-1) == 0):
                     self.end_node = self.matrix[i][j]
+                    self.raw_matrix[i][j] = 'E'
                 elif self.matrix[i][j].element == 'S':
                     self.start_node = self.matrix[i][j]
                     self.matrix[i][j].total_cost = 0
@@ -83,6 +86,7 @@ class Map():
 
         text = f.read()
         matrix = [list(i) for i in text.splitlines()]
+        self.raw_matrix = matrix
         for i in range(len(matrix)):
             row = []
             for j in range(len(matrix[0])):
@@ -104,10 +108,12 @@ stack = []
 m = Map()
 
 
-def DFS(goal, close):
+def DFS(goal, close, open_pos, close_pos):
     if len(stack) != 0:
+        Video.draw(open_pos, close_pos)
         cur_node = stack.pop()
         close.append(cur_node)
+        close_pos.append(cur_node.self_node)
 
         if cur_node is goal:
             return
@@ -116,26 +122,33 @@ def DFS(goal, close):
             if node not in close:
                 node.pre_node.append(cur_node.self_node)
                 stack.append(node)
-                DFS(goal, close)
+                open_pos.append(node.self_node)
+                DFS(goal, close, open_pos, close_pos)
 
 
 def GreedySearch(start, goal):
     open = [(start, 0)]
     close = []
+    open_pos = []
+    close_pos = []
 
     while goal not in close:
         if open:
             mini = min(open, key=lambda node: node[1])
             open.remove(mini)
             cur_node = mini[0]
+            if cur_node in close: 
+                continue
             close.append(mini[0])
+            close_pos.append(cur_node.self_node)
 
             for node in cur_node.neighbor_node:
                 if node not in close:
                     cost = heuristic_1(goal, node)
                     open.append((node, cost))
                     node.pre_node.append(cur_node.self_node)
-
+                    open_pos.append(node.self_node)
+            Video.draw(open_pos, close_pos)
         else:
             return
 
@@ -283,18 +296,24 @@ def main():
     # UCS(m.end_node, explore, [])
     # print_result(m)
 
-    # # TEST THUAT TOAN DFS
+    # TEST THUAT TOAN DFS
+    # open_pos = []
+    # close_pos = []
+    # Video.start(m.raw_matrix)
     # stack.append(m.start_node)
     # close = []
     # close.append(m.start_node)
     # print('DFS ALGORITHM')
-    # DFS(m.end_node, close)
+    # DFS(m.end_node, close, open_pos, close_pos)
+    # Video.create_gif('video.gif')
     # print_result(m)
 
     # # TEST THUAT TOAN GREEDY BEST FIRST SEARCH
-    # print('GBFS ALGORITHM')
-    # GreedySearch(m.start_node, m.end_node)
-    # print_result(m)
+    Video.start(m.raw_matrix)
+    print('GBFS ALGORITHM')
+    GreedySearch(m.start_node, m.end_node)
+    Video.create_gif('video.gif')
+    print_result(m)
 
     # TEST THUAT TOAN A*
     # print('A* ALGORITHM')
@@ -303,12 +322,12 @@ def main():
     # Astar(m.end_node, explore, [])
     # print_result(m)
 
-    # test thuật toán tối ưu:
-    print('UPDATE ALGORITHM')
-    explore = []
-    explore.append(m.start_node)
-    Update_Algo(m, explore, [])
-    print_result(m)
+    # # test thuật toán tối ưu:
+    # print('UPDATE ALGORITHM')
+    # explore = []
+    # explore.append(m.start_node)
+    # Update_Algo(m, explore, [])
+    # print_result(m)
 
 
 main()
