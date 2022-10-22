@@ -169,22 +169,19 @@ class Map():
         return route, cost
 
     def BFS(self):
-        queue = []
-        route = []
-        visited = []
-        visited.append(self.start_node)
-        queue.append(self.start_node)
+        queue = [self.start_node]
+        close = [self.start_node]
+        route = [self.end_node.self_node]
         cost = 0
 
         while queue:
             node = queue.pop(0)
+            close.append(node)
             if node == self.end_node:
-                route.append(node.self_node)
                 cost = self.back_tracking_route(route, node)
             else:
                 for n in node.neighbor_node:
-                    if n not in visited:
-                        visited.append(n)
+                    if n not in queue and n not in close:
                         queue.append(n)
                         n.pre_node.append(node)
         return route, cost
@@ -409,11 +406,11 @@ def main():
     """FOR FAST TESTING:"""
     # TEST NEW ALGO CỦA DƯƠNG:
 
-    input_file = 'Duong_input.txt'
+    input_file = 'input/advance/input2.txt'
     m = Map()
     m.read_file(input_file)
-    route, cost = m.Astar(0)
-    output_file = 'astar'
+    route, cost = m.BFS()
+    output_file = 'BFS'
     m.write_file(output_file, route, cost)
     m.visualize_maze(route, output_file)
 
