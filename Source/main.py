@@ -20,8 +20,7 @@ class Node():
         self.total_cost = 1000000  # tổng chi phí từ start node
         self.self_cost = 1  # chi phí khi di chuyển đến node này
         self.neighbor_node = []  # node lân cận có thể di chuyển
-        self.raw_matrix = [] # ma tran chua cac ki tu
-
+        self.raw_matrix = []  # ma tran chua cac ki tu
 
     def is_path(self):
         if self.element == 'x':
@@ -41,7 +40,7 @@ class Map():
         self.bonus_node = []  # điểm cộng
         # dịch chuyển tức thời (key: int, value: [nodeA, nodeB])
         self.tele_node = dict()
-        self.num_tele = 0 # so luong teleport
+        self.num_tele = 0  # so luong teleport
 
     def set_map(self):
         counter = 0
@@ -171,40 +170,42 @@ class Map():
                     open_pos.append(node.self_node)
                     self.DFS_Util(stack, goal, close, open_pos, close_pos)
 
-    def DFS(self):
+    def DFS(self, output_file):
         stack = []
         close = []
         open_pos = []
         close_pos = []
         stack.append(self.start_node)
         close.append(self.start_node)
-        Video.start(m.raw_matrix)
+        Video.start(self.raw_matrix)
         self.DFS_Util(stack, self.end_node, close, open_pos, close_pos)
         route = [self.end_node.self_node]
         cost = self.back_tracking_route(route, self.end_node)
-        Video.create_gif('dfs_video.gif')
+        output_file += '.gif'
+        Video.create_gif(output_file)
         return route, cost
 
-    def BFS(self):
+    def BFS(self, output_file):
         open_pos = []
         close = []
         close_pos = []
         queue = [self.start_node]
         route = [self.end_node.self_node]
         cost = 0
-        Video.start(m.raw_matrix)
+        Video.start(self.raw_matrix)
 
         while queue:
             node = queue.pop(0)
             Video.draw(open_pos, close_pos)
             close.append(node)
             close_pos.append(node.self_node)
-            
+
             close.append(node)
             if node == self.end_node:
                 cost = self.back_tracking_route(route, node)
                 Video.draw(open_pos, close_pos)
-                Video.create_gif('bfs_video.gif')
+                output_file += '.gif'
+                Video.create_gif(output_file)
                 return route, cost
             else:
                 for n in node.neighbor_node:
@@ -227,42 +228,43 @@ class Map():
                 if i not in explore:
                     explore.append(i)
                     open_pos.append(i.self_node)
-        
+
         close.append(mini)
         explore.remove(mini)
         close_pos.append(mini.self_node)
         Video.draw(open_pos, close_pos)
-        
+
         if mini != goal:
             self.UCS_Util(goal, explore, close, open_pos, close_pos)
         else:
             return
 
-    def UCS(self):
+    def UCS(self, output_file):
         open_pos = []
         close_pos = []
         explore = [self.start_node]
-        Video.start(m.raw_matrix)
+        Video.start(self.raw_matrix)
         self.UCS_Util(self.end_node, explore, [], open_pos, close_pos)
         route = [self.end_node.self_node]
         cost = self.back_tracking_route(
             route, self.end_node, self.end_node.total_cost)
-        Video.create_gif('ucs_video.gif')
+        output_file += '.gif'
+        Video.create_gif(output_file)
         return route, cost
 
-    def GBFS(self, h_type):
+    def GBFS(self, h_type, output_file):
         open = [(self.start_node, 0)]
         close = []
         open_pos = []
         close_pos = []
-        Video.start(m.raw_matrix)
+        Video.start(self.raw_matrix)
 
         while self.end_node not in close:
             if open:
                 # get the mini node which having min cost
                 mini = min(open, key=lambda node: node[1])
                 open.remove(mini)
-                if mini[0] in close: 
+                if mini[0] in close:
                     continue
                 close.append(mini[0])
                 close_pos.append(mini[0].self_node)
@@ -279,7 +281,8 @@ class Map():
 
         route = [self.end_node.self_node]
         cost = self.back_tracking_route(route, self.end_node)
-        Video.create_gif('gbfs_video.gif')
+        output_file += '.gif'
+        Video.create_gif(output_file)
         return route, cost
 
     def Astar_Util(self, goal, explore, close, h_type, open_pos, close_pos):
@@ -290,7 +293,7 @@ class Map():
         for i in explore:
             if i.total_cost + heuristic(goal, i, h_type) < mini.total_cost + heuristic(goal, mini, h_type):
                 mini = i
-       
+
         for i in mini.neighbor_node:
             if i not in close and mini.total_cost + i.self_cost < i.total_cost:
                 i.total_cost = mini.total_cost + i.self_cost
@@ -300,7 +303,7 @@ class Map():
                     open_pos.append(i.self_node)
 
         close.append(mini)
-        explore.remove(mini)            
+        explore.remove(mini)
         close_pos.append(mini.self_node)
         Video.draw(open_pos, close_pos)
 
@@ -309,17 +312,18 @@ class Map():
         else:
             return
 
-    def Astar(self, h_type):
+    def Astar(self, h_type, output_file):
         explore = []
         open_pos = []
         close_pos = []
-        Video.start(m.raw_matrix)
+        Video.start(self.raw_matrix)
         explore.append(self.start_node)
         self.Astar_Util(self.end_node, explore, [], h_type, open_pos, close_pos)
         route = [self.end_node.self_node]
         cost = self.back_tracking_route(
             route, self.end_node, self.end_node.total_cost)
-        Video.create_gif('astar_video.gif')
+        output_file += '.gif'
+        Video.create_gif(output_file)
         return route, cost
 
     def visualize_maze(self, route, file_path):
@@ -398,18 +402,25 @@ class Map():
                 j.total_cost = 1000000
 
     def New_Algo_Util(self, explore, close):
-        self.UCS_Util(self.end_node, explore, close)
+        self.UCS_Util(self.end_node, [self.start_node], [])
         route = self.back_tracking_route2(self.end_node)
-        route = self.back_tracking_route2(self.end_node)
-        for node in route:
-            for nei in node.neighbor_node:
-                if nei.self_node not in route and nei.self_cost < -1 and nei not in close:
-                    self.end_node.total_cost += nei.self_cost + 1
-                    node.pre_node.append(nei.self_node)
-                    nei.pre_node.append(node.self_node)
-                    close.append(nei)
+        close.extend(route)
 
-    def back_tracking_route2(self, node):
+        # duyệt trên đường đi của thuật toán cũ
+        for i in route:
+            # duyệt các node j kề với node i:
+            for j in i.neighbor_node:
+                explore.append(j)
+                if j.self_cost < -1 and j not in close:  # nếu j là node thưởng và chưa có trong tập đóng
+                    self.end_node.total_cost += j.self_cost + 1  # cập nhật tổng chi phí
+
+                    # cập nhật node thưởng vào đường đi:
+                    i.pre_node.append(j)
+                    j.pre_node.append(i)
+                    close.append(j)
+                    explore.remove(j)
+
+    def back_tracking_route2(self, node):  # return node
         route = []
         while node.pre_node:
             pre = node.pre_node[-1]
@@ -425,97 +436,40 @@ class Map():
         return route, cost
 
 
-m = Map()
-
 def main():
-    """HÀM MAIN GỐC"""
-    # create_output_folder()
-    # input_folder = ['input/level_1', 'input/level_2', 'input/advance']
-    # for path in input_folder:
-    #     for filename in os.listdir(path):
-    #         input_file = os.path.join(path, filename)  # input/level_1/input1.txt
-    #         m = Map()
-    #         m.read_file(input_file)
-    #         output_folder = path.replace('in', 'out')  # output/level_1
-    #         output_folder = os.path.join(output_folder, filename[:-4])  # output/level_1/input1
-    #         os.mkdir(output_folder)
+    create_output_folder()
+    input_folder = ['input/level_1', 'input/level_2', 'input/advance']
+    for path in input_folder:
+        for filename in os.listdir(path):
+            input_file = os.path.join(path, filename)  # input/level_1/input1.txt
+            m = Map()
+            m.read_file(input_file)
+            output_folder = path.replace('in', 'out')  # output/level_1
+            output_folder = os.path.join(output_folder, filename[:-4])  # output/level_1/input1
+            os.mkdir(output_folder)
 
-    #         list_algo = [m.DFS, m.BFS, m.UCS, m.GBFS, m.Astar]
-    #         list_name = ['dfs', 'bfs', 'ucs', 'gbfs', 'astar']
-    #         for i in range(5):
-    #             output_sub = os.path.join(output_folder, list_name[i])  # output/level_1/input1/bfs
-    #             os.mkdir(output_sub)
-    #             output_file = os.path.join(output_sub, list_name[i])
-    #             if i > 2:  # gbfs, astar
-    #                 for j in range(2):
-    #                     route, cost = list_algo[i](j)
-    #                     name = output_file + '_heuristic_' + str(j+1)
-    #                     m.write_file(name, route, cost)  # astar_heuristic_1.txt
-    #                     m.visualize_maze(route, name)  # astar_heuristic_1.jpg
-    #                     m.reset_map()
-    #             else:
-    #                 route, cost = list_algo[i]()
-    #                 output_file = os.path.join(output_sub, list_name[i])
-    #                 m.write_file(output_file, route, cost)  # output/level_1/input1/bfs/bfs.txt
-    #                 m.visualize_maze(route, output_file)  # output/level_1/input1/bfs/bfs.jpg
-    #                 m.reset_map()
+            list_algo = [m.DFS, m.BFS, m.UCS, m.GBFS, m.Astar]
+            list_name = ['dfs', 'bfs', 'ucs', 'gbfs', 'astar']
+            if path[-1] == '2':  # 'input/level_2'
+                list_algo.append(m.New_Algo)
+                list_name.append('new_algo')
 
-    """FOR FAST TESTING:"""
-    # TEST NEW ALGO CỦA DƯƠNG:
-
-    # input_file = 'Duong_input.txt'
-    # m = Map()
-    # m.read_file(input_file)
-    # route, cost = m.Astar(0)
-    # output_file = 'astar'
-    # m.write_file(output_file, route, cost)
-    # m.visualize_maze(route, output_file)
-
-
-    # TEST DFS TAO VIDEO OKE
-    # input_file = 'Duong_input.txt'
-    # m.read_file(input_file)
-    # route, cost = m.DFS()
-    # output_file = 'dfs'
-    # m.write_file(output_file, route, cost)
-    # m.visualize_maze(route, output_file)
-
-
-    # TEST GBFS TAO VIDEO OKE
-    # input_file = 'input/advance/input2.txt'
-    # m.read_file(input_file)
-    # route, cost = m.GBFS(0)
-    # output_file = 'gbfs'
-    # m.write_file(output_file, route, cost)
-    # m.visualize_maze(route, output_file)
-
-
-    # TEST UCS TAO VIDEO OKE
-    input_file = 'input/advance/input2.txt'
-    m.read_file(input_file)
-    route, cost = m.UCS()
-    output_file = 'ucs'
-    m.write_file(output_file, route, cost)
-    m.visualize_maze(route, output_file)
-
-
-    # TEST A* TAO VIDEO OKE
-    # input_file = 'source/Duong_input.txt'
-    # m.read_file(input_file)
-    # route, cost = m.Astar(0)
-    # output_file = 'Astar'
-    # m.write_file(output_file, route, cost)
-    # m.visualize_maze(route, output_file)
-
-
-    # TEST BFS TAO VIDEO OKE
-    # input_file = 'Duong_input.txt'
-    # m.read_file(input_file)
-    # route, cost = m.BFS()
-    # output_file = 'BFS'
-    # m.write_file(output_file, route, cost)
-    # m.visualize_maze(route, output_file)
-
+            for i in range(len(list_algo)):
+                output_sub = os.path.join(output_folder, list_name[i])  # output/level_1/input1/bfs
+                os.mkdir(output_sub)
+                output_file = os.path.join(output_sub, list_name[i])  # output/level_1/input1/bfs/bfs
+                if i > 2:  # gbfs, astar
+                    for j in range(2):
+                        new_output_file = output_file + '_heuristic_' + str(j+1)
+                        route, cost = list_algo[i](j, new_output_file)
+                        m.write_file(new_output_file, route, cost)  # astar_heuristic_1.txt
+                        m.visualize_maze(route, new_output_file)  # astar_heuristic_1.jpg
+                        m.reset_map()
+                else:
+                    route, cost = list_algo[i](output_file)
+                    m.write_file(output_file, route, cost)  # output/level_1/input1/bfs/bfs.txt
+                    m.visualize_maze(route, output_file)  # output/level_1/input1/bfs/bfs.jpg
+                    m.reset_map()
 
 
 if __name__ == "__main__":
