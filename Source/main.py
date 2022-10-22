@@ -482,21 +482,21 @@ def main():
 
 
     # TEST GBFS TAO VIDEO OKE
-    input_file = 'input/advance/input2.txt'
-    m.read_file(input_file)
-    route, cost = m.GBFS(0)
-    output_file = 'gbfs'
-    m.write_file(output_file, route, cost)
-    m.visualize_maze(route, output_file)
+    # input_file = 'input/advance/input2.txt'
+    # m.read_file(input_file)
+    # route, cost = m.GBFS(0)
+    # output_file = 'gbfs'
+    # m.write_file(output_file, route, cost)
+    # m.visualize_maze(route, output_file)
 
 
     # TEST UCS TAO VIDEO OKE
-    # input_file = 'source/Duong_input.txt'
-    # m.read_file(input_file)
-    # route, cost = m.UCS()
-    # output_file = 'ucs'
-    # m.write_file(output_file, route, cost)
-    # m.visualize_maze(route, output_file)
+    input_file = 'input/advance/input2.txt'
+    m.read_file(input_file)
+    route, cost = m.UCS()
+    output_file = 'ucs'
+    m.write_file(output_file, route, cost)
+    m.visualize_maze(route, output_file)
 
 
     # TEST A* TAO VIDEO OKE
