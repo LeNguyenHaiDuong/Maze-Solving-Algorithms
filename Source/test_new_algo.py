@@ -2,7 +2,6 @@
 https://colab.research.google.com/drive/1ejLc4LkrmjpbcRYC3W2xjfA0C0o1PWTp?usp=sharing#scrollTo=u5ZHJ1oq8Ucm
 https://favtutor.com/blogs/breadth-first-search-python
 """
-#123
 
 from helper import *
 import matplotlib.pyplot as plt
