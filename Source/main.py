@@ -343,7 +343,7 @@ class Map():
         walls = [(i, j) for i in range(len(self.matrix))
                  for j in range(len(self.matrix[0])) if self.matrix[i][j].element == 'x']
 
-        if len(route) > 0:
+        if len(route) > 1:
             direction = []
             for i in range(1, len(route)):
                 if route[i][0]-route[i-1][0] > 0:
@@ -393,7 +393,10 @@ class Map():
     def write_file(self, file_path, route, cost):
         file_path += '.txt'
         with open(file_path, 'w') as f:
-            f.write(str(cost)) if len(route) > 0 else f.write('NO')
+            if len(route) > 1 or self.start_node is self.end_node:
+                f.write(str(cost))
+            else:
+                f.write('NO')
 
     def reset_map(self):
         for row in self.matrix:
