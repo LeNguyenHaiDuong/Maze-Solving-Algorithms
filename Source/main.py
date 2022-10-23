@@ -1,6 +1,11 @@
 """References:
 https://colab.research.google.com/drive/1ejLc4LkrmjpbcRYC3W2xjfA0C0o1PWTp?usp=sharing#scrollTo=u5ZHJ1oq8Ucm
 https://favtutor.com/blogs/breadth-first-search-python
+https://stackoverflow.com/questions/2905965/creating-threads-in-python
+https://stackoverflow.com/questions/24688802/saving-an-animated-gif-in-pillow
+https://stackoverflow.com/questions/40043301/quality-and-file-size-issues-with-animated-gifs-and-pil-pillow#comment67406281_40043301
+https://www.asciiart.eu/art-and-design/mazes
+https://www.dcode.fr/maze-generator
 """
 
 
@@ -151,12 +156,12 @@ class Map():
             node = pre
         return cost
 
-    def DFS_Util(self, stack, goal, close, open_pos, close_pos):
+    def DFS_Util(self, open, goal, close, open_pos, close_pos):
         if goal in close:
             return
-        if len(stack) != 0:
+        if len(open) != 0:
             Video.draw(open_pos, close_pos)
-            cur_node = stack.pop()
+            cur_node = open.pop()
             close.append(cur_node)
             close_pos.append(cur_node.self_node)
 
@@ -166,19 +171,19 @@ class Map():
             for node in cur_node.neighbor_node:
                 if node not in close:
                     node.pre_node.append(cur_node)
-                    stack.append(node)
+                    open.append(node)
                     open_pos.append(node.self_node)
-                    self.DFS_Util(stack, goal, close, open_pos, close_pos)
+                    self.DFS_Util(open, goal, close, open_pos, close_pos)
 
     def DFS(self, output_file):
-        stack = []
+        open = []
         close = []
         open_pos = []
         close_pos = []
-        stack.append(self.start_node)
+        open.append(self.start_node)
         close.append(self.start_node)
         Video.start(self.raw_matrix)
-        self.DFS_Util(stack, self.end_node, close, open_pos, close_pos)
+        self.DFS_Util(open, self.end_node, close, open_pos, close_pos)
         route = [self.end_node.self_node]
         cost = self.back_tracking_route(route, self.end_node)
         output_file += '.gif'
@@ -214,6 +219,8 @@ class Map():
                         open_pos.append(n.self_node)
                         n.pre_node.append(node)
 
+        output_file += '.gif'
+        Video.create_gif(output_file)
         return [], 1000000  # nếu ko có đường đi
 
     def UCS_Util(self, goal, explore, close, open_pos, close_pos):
@@ -459,14 +466,15 @@ def main():
             m.read_file(input_file)
             output_folder = path.replace('in', 'out')  # output/level_1
             output_folder = os.path.join(output_folder, filename[:-4])  # output/level_1/input1
-            os.mkdir(output_folder)
+            os.makedirs(output_folder, exist_ok=True)
 
             list_algo = [m.DFS, m.BFS, m.UCS, m.GBFS, m.Astar, m.New_Algo]
             list_name = ['dfs', 'bfs', 'ucs', 'gbfs', 'astar', 'algo_1']
 
             for i in range(len(list_algo)):
+                # print(list_name[i], path, end = '\t')
                 output_sub = os.path.join(output_folder, list_name[i])  # output/level_1/input1/bfs
-                os.mkdir(output_sub)
+                os.makedirs(output_sub, exist_ok=True)
                 output_file = os.path.join(output_sub, list_name[i])  # output/level_1/input1/bfs/bfs
                 if i > 2 and i < 5:  # gbfs, astar
                     for j in range(2):

@@ -25,6 +25,7 @@ class Video:
 
     frames = []
     map_2d = []
+    num_open = 0
     window = None
 
     @classmethod
@@ -40,18 +41,6 @@ class Video:
     def draw(cls, open, close):
         cls.window.fill(tuple(cls.BACKGROUND_COLOR))
 
-        # import random
-        # i = random.choice([0, 1, 2])
-
-        # cls.BACKGROUND_COLOR[i] += 20 * a[i]
-
-        # if cls.BACKGROUND_COLOR[i] > 255:
-        #     cls.BACKGROUND_COLOR[i] = 255
-        #     a[i] *= -1
-        # elif cls.BACKGROUND_COLOR[i] < 150:
-        #     cls.BACKGROUND_COLOR[i] = 150
-        #     a[i] *= -1
-
         map_2d = []
         for i in range(len(cls.map_2d)):
             row = []
@@ -59,12 +48,21 @@ class Video:
                 row.append(cls.map_2d[i][j])
             map_2d.append(row)
 
+       
         for x, y in open:
             if map_2d[x][y] != 'S':
                 map_2d[x][y] = 'O'
         for x, y in close:
             if map_2d[x][y] != 'S':
                 map_2d[x][y] = 'C'
+
+        # Đoạn code này dùng để đếm số lượng node đã được mở trước khi tìm ra được đường đi
+        # cls.num_open = 0
+        # for i in range(len(map_2d)):
+        #     for j in range(len(map_2d[0])):
+        #         if map_2d[i][j] == 'C' or map_2d[i][j] == 'O' or \
+        #         map_2d[i][j] == 'S' or map_2d[i][j] == 'E':
+        #             cls.num_open += 1
 
         for y, row in enumerate(map_2d):
             for x, col in enumerate(row):
@@ -99,14 +97,25 @@ class Video:
     @classmethod
     def create_gif(cls, filename="video.gif"):
         pygame.quit()
+        # print(cls.num_open) # số lượng node đã được mở trước khi tìm ra đường đi
         try:
-            images = []
-            for frame in cls.frames:
-                img = Image.open(frame).convert("P")  # ------------------------TK
-                images.append(img)
+            images_dict = {}
+            threads = []
+
+            for index, frame in enumerate(cls.frames):
+                threads.append(threading.Thread(target=add_frame, args=(images_dict, index, frame)))
+                threads[-1].start()
+
+            for thread in threads:
+                thread.join()
+
+            images = [images_dict[i] for i in range(len(images_dict))]
             images[0].save(filename, save_all=True, append_images=images[1:], duration=100, loop=0, optimize=True)
 
             for frame in cls.frames:
                 threading.Thread(target=os.remove, args=(frame,)).start()
-        except:
+        except Exception:
             print('ERROR CREATING GIF !!!')
+
+def add_frame(images_dict, index, frame):
+    images_dict[index] = Image.open(frame).convert("P")

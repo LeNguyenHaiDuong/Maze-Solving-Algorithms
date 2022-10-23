@@ -1,5 +1,6 @@
 import math
 import os
+import shutil
 
 
 def heuristic_1(goal, now):  # khoang cach theo toa do
@@ -50,6 +51,7 @@ def heuristic(goal, now, h_type):
 
 
 def create_output_folder():
+    shutil.rmtree('output', ignore_errors=True)
     try:
         os.mkdir('output')
         os.mkdir('output/level_1')
